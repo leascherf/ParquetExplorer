@@ -16,12 +16,14 @@ namespace ParquetExplorer
             menuStrip1 = new System.Windows.Forms.MenuStrip();
             fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            openAzureToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             compareToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
 
             toolStrip1 = new System.Windows.Forms.ToolStrip();
             btnOpen = new System.Windows.Forms.ToolStripButton();
+            btnOpenAzure = new System.Windows.Forms.ToolStripButton();
             btnCompare = new System.Windows.Forms.ToolStripButton();
             toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             lblFilterLabel = new System.Windows.Forms.ToolStripLabel();
@@ -63,7 +65,7 @@ namespace ParquetExplorer
             // fileToolStripMenuItem
             fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[]
             {
-                openToolStripMenuItem, compareToolStripMenuItem, toolStripSeparator1, exitToolStripMenuItem
+                openToolStripMenuItem, openAzureToolStripMenuItem, compareToolStripMenuItem, toolStripSeparator1, exitToolStripMenuItem
             });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             fileToolStripMenuItem.Text = "&File";
@@ -72,8 +74,14 @@ namespace ParquetExplorer
             // openToolStripMenuItem
             openToolStripMenuItem.Name = "openToolStripMenuItem";
             openToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O;
-            openToolStripMenuItem.Text = "&Open Parquet...";
+            openToolStripMenuItem.Text = "&Open Local File...";
             openToolStripMenuItem.Click += openToolStripMenuItem_Click;
+
+            // openAzureToolStripMenuItem
+            openAzureToolStripMenuItem.Name = "openAzureToolStripMenuItem";
+            openAzureToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.O;
+            openAzureToolStripMenuItem.Text = "Open from &Azure Blob Storage...";
+            openAzureToolStripMenuItem.Click += openAzureToolStripMenuItem_Click;
 
             // compareToolStripMenuItem
             compareToolStripMenuItem.Name = "compareToolStripMenuItem";
@@ -91,7 +99,7 @@ namespace ParquetExplorer
             // toolStrip1
             toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[]
             {
-                btnOpen, btnCompare, toolStripSeparator2,
+                btnOpen, btnOpenAzure, btnCompare, toolStripSeparator2,
                 lblFilterLabel, txtFilter, lblColumnLabel, cmbFilterColumn, btnApplyFilter, btnShowEmptyColumns
             });
             toolStrip1.Location = new System.Drawing.Point(0, 24);
@@ -106,10 +114,18 @@ namespace ParquetExplorer
             // btnOpen
             btnOpen.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             btnOpen.Name = "btnOpen";
-            btnOpen.Text = "📂 Open";
-            btnOpen.ToolTipText = "Open Parquet File (Ctrl+O)";
+            btnOpen.Text = "📂 Open Local";
+            btnOpen.ToolTipText = "Open Local Parquet File (Ctrl+O)";
             btnOpen.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             btnOpen.Click += btnOpen_Click;
+
+            // btnOpenAzure
+            btnOpenAzure.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            btnOpenAzure.Name = "btnOpenAzure";
+            btnOpenAzure.Text = "☁ Open Azure";
+            btnOpenAzure.ToolTipText = "Open Parquet from Azure Blob Storage (Ctrl+Shift+O)";
+            btnOpenAzure.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            btnOpenAzure.Click += btnOpenAzure_Click;
 
             // btnCompare
             btnCompare.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
@@ -300,11 +316,13 @@ namespace ParquetExplorer
         private System.Windows.Forms.MenuStrip menuStrip1 = null!;
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem = null!;
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem = null!;
+        private System.Windows.Forms.ToolStripMenuItem openAzureToolStripMenuItem = null!;
         private System.Windows.Forms.ToolStripMenuItem compareToolStripMenuItem = null!;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1 = null!;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem = null!;
         private System.Windows.Forms.ToolStrip toolStrip1 = null!;
         private System.Windows.Forms.ToolStripButton btnOpen = null!;
+        private System.Windows.Forms.ToolStripButton btnOpenAzure = null!;
         private System.Windows.Forms.ToolStripButton btnCompare = null!;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2 = null!;
         private System.Windows.Forms.ToolStripLabel lblFilterLabel = null!;

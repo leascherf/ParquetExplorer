@@ -30,6 +30,7 @@ static class Program
         services.AddSingleton<IParquetService, ParquetService>();
         services.AddSingleton<ICompareService, CompareService>();
         services.AddSingleton<IExplorerService, ExplorerService>();
+        services.AddSingleton<IAzureBlobService, AzureBlobService>();
 
         // Register forms as transient so each resolve creates a fresh instance
         services.AddTransient<MainForm>();
