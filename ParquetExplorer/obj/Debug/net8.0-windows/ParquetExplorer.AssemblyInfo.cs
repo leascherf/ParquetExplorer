@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("ParquetExplorer")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+cb30a4117d12e70f83bd9782ece70287f830d75c")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9a05c2d77712dad4b08a850100cf3d3f774c10f2")]
 [assembly: System.Reflection.AssemblyProductAttribute("ParquetExplorer")]
 [assembly: System.Reflection.AssemblyTitleAttribute("ParquetExplorer")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
