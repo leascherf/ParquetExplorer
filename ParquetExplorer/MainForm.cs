@@ -10,12 +10,14 @@ namespace ParquetExplorer
         private readonly IExplorerService _explorer;
         private readonly IParquetService _parquetService;
         private readonly ICompareService _compareService;
+        private readonly IAzureBlobService _azureBlobService;
 
-        public MainForm(IExplorerService explorer, IParquetService parquetService, ICompareService compareService)
+        public MainForm(IExplorerService explorer, IParquetService parquetService, ICompareService compareService, IAzureBlobService azureBlobService)
         {
             _explorer = explorer;
             _parquetService = parquetService;
             _compareService = compareService;
+            _azureBlobService = azureBlobService;
             InitializeComponent();
             EnableDoubleBuffer(dataGridView1);
         }
@@ -72,6 +74,59 @@ namespace ParquetExplorer
                 MessageBox.Show($"Error loading file:\n{ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 toolStripStatusLabel1.Text = "⚠  Error loading file";
+            }
+        }
+
+        private async void openAzureToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            await OpenFromAzureAsync();
+        }
+
+        private async void btnOpenAzure_Click(object sender, EventArgs e)
+        {
+            await OpenFromAzureAsync();
+        }
+
+        private async Task OpenFromAzureAsync()
+        {
+            using var dlg = new AzureBlobBrowseForm(_azureBlobService);
+            if (dlg.ShowDialog(this) != DialogResult.OK) return;
+
+            string? tempFile = dlg.SelectedTempFilePath;
+            string? displayName = dlg.SelectedBlobDisplayName;
+            if (tempFile == null) return;
+
+            toolStripStatusLabel1.Text = "Loading...";
+            try
+            {
+                await _explorer.LoadFileAsync(tempFile);
+
+                var fileInfo = new System.IO.FileInfo(tempFile);
+                lblFilePath.Text = $"☁  {displayName}";
+                lblFilePath.ForeColor = System.Drawing.Color.FromArgb(40, 56, 72);
+                lblFilePath.Font = new System.Drawing.Font("Segoe UI", 9f);
+
+                cmbFilterColumn.Items.Clear();
+                cmbFilterColumn.Items.Add("(All Columns)");
+                foreach (var col in _explorer.ColumnNames)
+                    cmbFilterColumn.Items.Add(col);
+                cmbFilterColumn.SelectedIndex = 0;
+
+                txtFilter.Text = string.Empty;
+                RefreshGrid();
+                toolStripStatusLabel1.Text = $"✓  Loaded {_explorer.TotalRowCount:N0} rows  |  {_explorer.ColumnNames.Count} columns  |  {fileInfo.Length / 1024.0 / 1024.0:F2} MB";
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Error loading blob:\n{ex.Message}", "Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                toolStripStatusLabel1.Text = "⚠  Error loading blob";
+            }
+            finally
+            {
+                // Clean up the temporary file after loading
+                try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); }
+                catch { /* best effort */ }
             }
         }
 
