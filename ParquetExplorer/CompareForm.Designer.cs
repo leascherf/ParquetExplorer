@@ -17,6 +17,9 @@ namespace ParquetExplorer
             btnOpenLeft = new System.Windows.Forms.Button();
             btnOpenRight = new System.Windows.Forms.Button();
             btnCompare = new System.Windows.Forms.Button();
+            lblFilter = new System.Windows.Forms.Label();
+            cmbFilter = new System.Windows.Forms.ComboBox();
+            chkShowEmptyColumns = new System.Windows.Forms.CheckBox();
 
             pnlFiles = new System.Windows.Forms.SplitContainer();
             pnlLeftFile = new System.Windows.Forms.Panel();
@@ -51,6 +54,9 @@ namespace ParquetExplorer
             pnlTop.Controls.Add(btnOpenLeft);
             pnlTop.Controls.Add(btnOpenRight);
             pnlTop.Controls.Add(btnCompare);
+            pnlTop.Controls.Add(lblFilter);
+            pnlTop.Controls.Add(cmbFilter);
+            pnlTop.Controls.Add(chkShowEmptyColumns);
 
             // btnOpenLeft
             btnOpenLeft.Text = "Open Left File";
@@ -73,9 +79,25 @@ namespace ParquetExplorer
             btnCompare.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             btnCompare.Click += btnCompare_Click;
 
+            // lblFilter
+            lblFilter.AutoSize = true;
+            lblFilter.Location = new System.Drawing.Point(370, 13);
+            lblFilter.Text = "Filter:";
+
+            // cmbFilter
+            cmbFilter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            cmbFilter.Location = new System.Drawing.Point(410, 10);
+            cmbFilter.Size = new System.Drawing.Size(120, 23);
+
+            // chkShowEmptyColumns
+            chkShowEmptyColumns.AutoSize = true;
+            chkShowEmptyColumns.Location = new System.Drawing.Point(550, 12);
+            chkShowEmptyColumns.Text = "Show Empty Columns";
+            chkShowEmptyColumns.CheckedChanged += chkShowEmptyColumns_CheckedChanged;
+
             // pnlLegend
             pnlLegend.Dock = System.Windows.Forms.DockStyle.Bottom;
-            pnlLegend.Height = 50;
+            pnlLegend.Height = 85;
             pnlLegend.Padding = new System.Windows.Forms.Padding(4);
             pnlLegend.Controls.Add(lblSummary);
             pnlLegend.Controls.Add(lblLegendDiff);
@@ -86,9 +108,13 @@ namespace ParquetExplorer
             // lblSummary
             lblSummary.AutoSize = false;
             lblSummary.Dock = System.Windows.Forms.DockStyle.Bottom;
-            lblSummary.Height = 20;
-            lblSummary.Text = "Open two files and click Compare.";
-            lblSummary.Padding = new System.Windows.Forms.Padding(4, 0, 0, 0);
+            lblSummary.Height = 55;
+            lblSummary.Font = new System.Drawing.Font("Segoe UI", 10f, System.Drawing.FontStyle.Regular);
+            lblSummary.BackColor = System.Drawing.Color.WhiteSmoke;
+            lblSummary.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            lblSummary.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            lblSummary.Text = "Open two files and click Compare to calculate match percentages.";
+            lblSummary.Padding = new System.Windows.Forms.Padding(6);
 
             // Legend labels
             lblLegendDiff.AutoSize = true;
@@ -139,10 +165,14 @@ namespace ParquetExplorer
             dgvLeft.AllowUserToAddRows = false;
             dgvLeft.AllowUserToDeleteRows = false;
             dgvLeft.ReadOnly = true;
-            dgvLeft.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            dgvLeft.AllowUserToResizeColumns = true;
+            dgvLeft.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.None;
             dgvLeft.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             dgvLeft.BorderStyle = System.Windows.Forms.BorderStyle.None;
             dgvLeft.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvLeft.CellDoubleClick += Dgv_CellDoubleClick;
+            dgvLeft.CellToolTipTextNeeded += Dgv_CellToolTipTextNeeded;
+            dgvLeft.Scroll += Dgv_Scroll;
 
             // Right panel
             pnlRightFile.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -163,10 +193,14 @@ namespace ParquetExplorer
             dgvRight.AllowUserToAddRows = false;
             dgvRight.AllowUserToDeleteRows = false;
             dgvRight.ReadOnly = true;
-            dgvRight.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            dgvRight.AllowUserToResizeColumns = true;
+            dgvRight.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.None;
             dgvRight.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             dgvRight.BorderStyle = System.Windows.Forms.BorderStyle.None;
             dgvRight.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvRight.CellDoubleClick += Dgv_CellDoubleClick;
+            dgvRight.CellToolTipTextNeeded += Dgv_CellToolTipTextNeeded;
+            dgvRight.Scroll += Dgv_Scroll;
 
             // CompareForm
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -194,6 +228,9 @@ namespace ParquetExplorer
         private System.Windows.Forms.Button btnOpenLeft = null!;
         private System.Windows.Forms.Button btnOpenRight = null!;
         private System.Windows.Forms.Button btnCompare = null!;
+        private System.Windows.Forms.Label lblFilter = null!;
+        private System.Windows.Forms.ComboBox cmbFilter = null!;
+        private System.Windows.Forms.CheckBox chkShowEmptyColumns = null!;
         private System.Windows.Forms.SplitContainer pnlFiles = null!;
         private System.Windows.Forms.Panel pnlLeftFile = null!;
         private System.Windows.Forms.Label lblLeftFile = null!;

@@ -8,6 +8,6 @@ namespace ParquetExplorer.Services.Interfaces
     /// </summary>
     public interface ICompareService
     {
-        CompareResult Compare(DataTable left, DataTable right);
+        CompareResult Compare(DataTable left, DataTable right, string? matchKeyColumn = null);
     }
 }

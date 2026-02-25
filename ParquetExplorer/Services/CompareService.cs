@@ -10,49 +10,94 @@ namespace ParquetExplorer.Services
     /// </summary>
     public class CompareService : ICompareService
     {
-        public CompareResult Compare(DataTable left, DataTable right)
+        public CompareResult Compare(DataTable left, DataTable right, string? matchKeyColumn = null)
         {
-            var leftKeys  = BuildRowKeys(left);
-            var rightKeys = BuildRowKeys(right);
-
             var allColumns = left.Columns.Cast<DataColumn>().Select(c => c.ColumnName)
                 .Union(right.Columns.Cast<DataColumn>().Select(c => c.ColumnName))
                 .ToList();
 
-            int maxRows       = Math.Max(left.Rows.Count, right.Rows.Count);
-            var rows          = new List<RowDiff>(maxRows);
-            int sameCount     = 0;
-            int diffCount     = 0;
-            int leftOnly      = 0;
-            int rightOnly     = 0;
+            var rows = new List<RowDiff>();
+            int sameCount = 0;
+            int diffCount = 0;
+            int leftOnly = 0;
+            int rightOnly = 0;
 
-            for (int i = 0; i < maxRows; i++)
+            if (string.IsNullOrWhiteSpace(matchKeyColumn))
             {
-                string? lKey = i < leftKeys.Count  ? leftKeys[i]  : null;
-                string? rKey = i < rightKeys.Count ? rightKeys[i] : null;
+                // Sequential fallback logic
+                var leftKeys = BuildRowKeys(left);
+                var rightKeys = BuildRowKeys(right);
+                int maxRows = Math.Max(left.Rows.Count, right.Rows.Count);
 
-                DataRow? lRow = i < left.Rows.Count  ? left.Rows[i]  : null;
-                DataRow? rRow = i < right.Rows.Count ? right.Rows[i] : null;
+                for (int i = 0; i < maxRows; i++)
+                {
+                    string? lKey = i < leftKeys.Count ? leftKeys[i] : null;
+                    string? rKey = i < rightKeys.Count ? rightKeys[i] : null;
 
-                DiffStatus status;
-                if (lKey == null)       { status = DiffStatus.RightOnly; rightOnly++; }
-                else if (rKey == null)  { status = DiffStatus.LeftOnly;  leftOnly++; }
-                else if (lKey == rKey)  { status = DiffStatus.Same;      sameCount++; }
-                else                    { status = DiffStatus.Different; diffCount++; }
+                    DataRow? lRow = i < left.Rows.Count ? left.Rows[i] : null;
+                    DataRow? rRow = i < right.Rows.Count ? right.Rows[i] : null;
 
-                rows.Add(new RowDiff { LeftRow = lRow, RightRow = rRow, Status = status });
+                    DiffStatus status;
+                    if (lRow == null) { status = DiffStatus.RightOnly; rightOnly++; }
+                    else if (rRow == null) { status = DiffStatus.LeftOnly; leftOnly++; }
+                    else if (lKey == rKey) { status = DiffStatus.Same; sameCount++; }
+                    else { status = DiffStatus.Different; diffCount++; }
+
+                    rows.Add(new RowDiff { LeftRow = lRow, RightRow = rRow, Status = status });
+                }
+            }
+            else
+            {
+                // ID-based matching algorithm
+                var leftDict = new Dictionary<string, DataRow>();
+                foreach (DataRow row in left.Rows)
+                {
+                    string key = row.Table.Columns.Contains(matchKeyColumn) && row[matchKeyColumn] != DBNull.Value ? row[matchKeyColumn]?.ToString() ?? "" : "";
+                    if (!string.IsNullOrEmpty(key) && !leftDict.ContainsKey(key))
+                        leftDict[key] = row;
+                }
+
+                var rightDict = new Dictionary<string, DataRow>();
+                foreach (DataRow row in right.Rows)
+                {
+                    string key = row.Table.Columns.Contains(matchKeyColumn) && row[matchKeyColumn] != DBNull.Value ? row[matchKeyColumn]?.ToString() ?? "" : "";
+                    if (!string.IsNullOrEmpty(key) && !rightDict.ContainsKey(key))
+                        rightDict[key] = row;
+                }
+
+                var allKeys = leftDict.Keys.Union(rightDict.Keys).OrderBy(k => k).ToList();
+
+                foreach (var key in allKeys)
+                {
+                    bool inLeft = leftDict.TryGetValue(key, out var lRow);
+                    bool inRight = rightDict.TryGetValue(key, out var rRow);
+
+                    DiffStatus status;
+                    if (!inLeft) { status = DiffStatus.RightOnly; rightOnly++; }
+                    else if (!inRight) { status = DiffStatus.LeftOnly; leftOnly++; }
+                    else
+                    {
+                        string lStr = string.Join("|", lRow!.ItemArray.Select(v => v == DBNull.Value ? "" : v?.ToString() ?? ""));
+                        string rStr = string.Join("|", rRow!.ItemArray.Select(v => v == DBNull.Value ? "" : v?.ToString() ?? ""));
+
+                        if (lStr == rStr) { status = DiffStatus.Same; sameCount++; }
+                        else { status = DiffStatus.Different; diffCount++; }
+                    }
+
+                    rows.Add(new RowDiff { LeftRow = lRow, RightRow = rRow, Status = status });
+                }
             }
 
             return new CompareResult
             {
-                AllColumns    = allColumns,
-                Rows          = rows,
-                SameCount     = sameCount,
-                DiffCount     = diffCount,
+                AllColumns = allColumns,
+                Rows = rows,
+                SameCount = sameCount,
+                DiffCount = diffCount,
                 LeftOnlyCount = leftOnly,
-                RightOnlyCount= rightOnly,
+                RightOnlyCount = rightOnly,
                 LeftTotalRows = left.Rows.Count,
-                RightTotalRows= right.Rows.Count,
+                RightTotalRows = right.Rows.Count,
             };
         }
 
