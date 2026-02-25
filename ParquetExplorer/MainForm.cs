@@ -1,16 +1,21 @@
 using System;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using ParquetExplorer.Services;
+using ParquetExplorer.Services.Interfaces;
 
 namespace ParquetExplorer
 {
     public partial class MainForm : Form
     {
-        private readonly ExplorerService _explorer = new();
+        private readonly IExplorerService _explorer;
+        private readonly IParquetService  _parquetService;
+        private readonly ICompareService  _compareService;
 
-        public MainForm()
+        public MainForm(IExplorerService explorer, IParquetService parquetService, ICompareService compareService)
         {
+            _explorer       = explorer;
+            _parquetService = parquetService;
+            _compareService = compareService;
             InitializeComponent();
         }
 
@@ -122,7 +127,7 @@ namespace ParquetExplorer
 
         private void OpenCompareForm()
         {
-            var form = new CompareForm();
+            var form = new CompareForm(_parquetService, _compareService);
             form.Show(this);
         }
 

@@ -2,6 +2,7 @@ using System.Data;
 using Parquet;
 using Parquet.Data;
 using Parquet.Schema;
+using ParquetExplorer.Services.Interfaces;
 
 namespace ParquetExplorer.Services
 {
@@ -9,9 +10,9 @@ namespace ParquetExplorer.Services
     /// Reads a Parquet file and returns its content as a <see cref="DataTable"/>.
     /// This service has no dependency on Windows Forms and can be reused by any frontend.
     /// </summary>
-    public static class ParquetService
+    public class ParquetService : IParquetService
     {
-        public static async Task<DataTable> LoadAsync(string filePath)
+        public async Task<DataTable> LoadAsync(string filePath)
         {
             var table = new DataTable();
 

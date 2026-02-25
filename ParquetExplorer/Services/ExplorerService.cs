@@ -1,5 +1,6 @@
 using System.Data;
 using ParquetExplorer.Models;
+using ParquetExplorer.Services.Interfaces;
 
 namespace ParquetExplorer.Services
 {
@@ -7,11 +8,18 @@ namespace ParquetExplorer.Services
     /// Encapsulates filtering and pagination logic for the parquet explorer.
     /// Has no dependency on Windows Forms and can be reused by any frontend.
     /// </summary>
-    public class ExplorerService
+    public class ExplorerService : IExplorerService
     {
+        private readonly IParquetService _parquetService;
+
         private List<DataRow> _allRows      = new();
         private List<DataRow> _filteredRows = new();
         private DataTable     _dataTable    = new();
+
+        public ExplorerService(IParquetService parquetService)
+        {
+            _parquetService = parquetService;
+        }
 
         public int CurrentPage { get; private set; } = 1;
         public int PageSize    { get; private set; } = 25;
@@ -28,7 +36,7 @@ namespace ParquetExplorer.Services
         /// </summary>
         public async Task LoadFileAsync(string filePath)
         {
-            _dataTable    = await ParquetService.LoadAsync(filePath);
+            _dataTable    = await _parquetService.LoadAsync(filePath);
             _allRows      = _dataTable.Rows.Cast<DataRow>().ToList();
             _filteredRows = new List<DataRow>(_allRows);
             CurrentPage   = 1;

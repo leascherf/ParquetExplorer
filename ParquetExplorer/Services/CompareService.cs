@@ -1,5 +1,6 @@
 using System.Data;
 using ParquetExplorer.Models;
+using ParquetExplorer.Services.Interfaces;
 
 namespace ParquetExplorer.Services
 {
@@ -7,9 +8,9 @@ namespace ParquetExplorer.Services
     /// Compares two Parquet DataTables and returns a <see cref="CompareResult"/>.
     /// Has no dependency on Windows Forms and can be reused by any frontend.
     /// </summary>
-    public static class CompareService
+    public class CompareService : ICompareService
     {
-        public static CompareResult Compare(DataTable left, DataTable right)
+        public CompareResult Compare(DataTable left, DataTable right)
         {
             var leftKeys  = BuildRowKeys(left);
             var rightKeys = BuildRowKeys(right);
