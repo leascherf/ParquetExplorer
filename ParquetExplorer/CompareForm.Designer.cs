@@ -55,8 +55,9 @@ namespace ParquetExplorer
 
             // pnlTop
             pnlTop.Dock = System.Windows.Forms.DockStyle.Top;
-            pnlTop.Height = 40;
-            pnlTop.Padding = new System.Windows.Forms.Padding(4);
+            pnlTop.Height = 44;
+            pnlTop.Padding = new System.Windows.Forms.Padding(6, 6, 6, 6);
+            pnlTop.BackColor = System.Drawing.Color.FromArgb(248, 249, 252);
             pnlTop.Controls.Add(btnOpenLeft);
             pnlTop.Controls.Add(btnOpenRight);
             pnlTop.Controls.Add(btnCompare);
@@ -65,46 +66,60 @@ namespace ParquetExplorer
             pnlTop.Controls.Add(chkShowEmptyColumns);
 
             // btnOpenLeft
-            btnOpenLeft.Text = "Open Left File";
-            btnOpenLeft.Location = new System.Drawing.Point(4, 6);
+            btnOpenLeft.Text = "📂 Open Left";
+            btnOpenLeft.Location = new System.Drawing.Point(6, 7);
             btnOpenLeft.Size = new System.Drawing.Size(120, 28);
+            btnOpenLeft.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            btnOpenLeft.BackColor = System.Drawing.Color.FromArgb(220, 232, 248);
+            btnOpenLeft.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(160, 190, 230);
+            btnOpenLeft.Font = new System.Drawing.Font("Segoe UI", 9f);
             btnOpenLeft.Click += btnOpenLeft_Click;
 
             // btnOpenRight
-            btnOpenRight.Text = "Open Right File";
-            btnOpenRight.Location = new System.Drawing.Point(132, 6);
+            btnOpenRight.Text = "📂 Open Right";
+            btnOpenRight.Location = new System.Drawing.Point(134, 7);
             btnOpenRight.Size = new System.Drawing.Size(120, 28);
+            btnOpenRight.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            btnOpenRight.BackColor = System.Drawing.Color.FromArgb(214, 242, 214);
+            btnOpenRight.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(160, 220, 160);
+            btnOpenRight.Font = new System.Drawing.Font("Segoe UI", 9f);
             btnOpenRight.Click += btnOpenRight_Click;
 
             // btnCompare
-            btnCompare.Text = "Compare";
-            btnCompare.Location = new System.Drawing.Point(264, 6);
-            btnCompare.Size = new System.Drawing.Size(90, 28);
-            btnCompare.BackColor = System.Drawing.Color.SteelBlue;
+            btnCompare.Text = "⇄ Compare";
+            btnCompare.Location = new System.Drawing.Point(262, 7);
+            btnCompare.Size = new System.Drawing.Size(100, 28);
+            btnCompare.BackColor = System.Drawing.Color.FromArgb(44, 123, 229);
             btnCompare.ForeColor = System.Drawing.Color.White;
             btnCompare.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            btnCompare.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(30, 100, 200);
+            btnCompare.Font = new System.Drawing.Font("Segoe UI", 9f, System.Drawing.FontStyle.Bold);
             btnCompare.Click += btnCompare_Click;
 
             // lblFilter
             lblFilter.AutoSize = true;
-            lblFilter.Location = new System.Drawing.Point(370, 13);
+            lblFilter.Location = new System.Drawing.Point(378, 13);
+            lblFilter.Font = new System.Drawing.Font("Segoe UI", 9f);
             lblFilter.Text = "Filter:";
 
             // cmbFilter
             cmbFilter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            cmbFilter.Location = new System.Drawing.Point(410, 10);
-            cmbFilter.Size = new System.Drawing.Size(120, 23);
+            cmbFilter.Location = new System.Drawing.Point(415, 10);
+            cmbFilter.Size = new System.Drawing.Size(130, 23);
+            cmbFilter.Font = new System.Drawing.Font("Segoe UI", 9f);
 
             // chkShowEmptyColumns
             chkShowEmptyColumns.AutoSize = true;
-            chkShowEmptyColumns.Location = new System.Drawing.Point(550, 12);
+            chkShowEmptyColumns.Location = new System.Drawing.Point(560, 12);
             chkShowEmptyColumns.Text = "Show Empty Columns";
+            chkShowEmptyColumns.Font = new System.Drawing.Font("Segoe UI", 9f);
             chkShowEmptyColumns.CheckedChanged += chkShowEmptyColumns_CheckedChanged;
 
             // pnlLegend
             pnlLegend.Dock = System.Windows.Forms.DockStyle.Bottom;
-            pnlLegend.Height = 85;
-            pnlLegend.Padding = new System.Windows.Forms.Padding(4);
+            pnlLegend.Height = 92;
+            pnlLegend.Padding = new System.Windows.Forms.Padding(6);
+            pnlLegend.BackColor = System.Drawing.Color.FromArgb(248, 249, 252);
             pnlLegend.Controls.Add(lblSummary);
             pnlLegend.Controls.Add(lblLegendDiff);
             pnlLegend.Controls.Add(lblLegendLeft);
@@ -114,38 +129,43 @@ namespace ParquetExplorer
             // lblSummary
             lblSummary.AutoSize = false;
             lblSummary.Dock = System.Windows.Forms.DockStyle.Bottom;
-            lblSummary.Height = 55;
-            lblSummary.Font = new System.Drawing.Font("Segoe UI", 10f, System.Drawing.FontStyle.Regular);
-            lblSummary.BackColor = System.Drawing.Color.WhiteSmoke;
+            lblSummary.Height = 58;
+            lblSummary.Font = new System.Drawing.Font("Segoe UI", 9f, System.Drawing.FontStyle.Regular);
+            lblSummary.BackColor = System.Drawing.Color.FromArgb(240, 244, 251);
             lblSummary.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             lblSummary.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
-            lblSummary.Text = "Open two files and click Compare to calculate match percentages.";
-            lblSummary.Padding = new System.Windows.Forms.Padding(6);
+            lblSummary.Text = "Open two files and click ⇄ Compare to calculate match percentages.";
+            lblSummary.Padding = new System.Windows.Forms.Padding(8);
+            lblSummary.ForeColor = System.Drawing.Color.FromArgb(60, 80, 110);
 
             // Legend labels
             lblLegendDiff.AutoSize = true;
-            lblLegendDiff.Location = new System.Drawing.Point(4, 4);
+            lblLegendDiff.Location = new System.Drawing.Point(6, 5);
             lblLegendDiff.BackColor = System.Drawing.Color.FromArgb(255, 255, 180);
-            lblLegendDiff.Text = "  Different  ";
+            lblLegendDiff.Text = "  ⚠ Different  ";
             lblLegendDiff.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            lblLegendDiff.Font = new System.Drawing.Font("Segoe UI", 9f);
 
             lblLegendLeft.AutoSize = true;
-            lblLegendLeft.Location = new System.Drawing.Point(110, 4);
+            lblLegendLeft.Location = new System.Drawing.Point(126, 5);
             lblLegendLeft.BackColor = System.Drawing.Color.FromArgb(255, 182, 182);
-            lblLegendLeft.Text = "  Left only  ";
+            lblLegendLeft.Text = "  ◁ Left only  ";
             lblLegendLeft.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            lblLegendLeft.Font = new System.Drawing.Font("Segoe UI", 9f);
 
             lblLegendRight.AutoSize = true;
-            lblLegendRight.Location = new System.Drawing.Point(216, 4);
+            lblLegendRight.Location = new System.Drawing.Point(244, 5);
             lblLegendRight.BackColor = System.Drawing.Color.FromArgb(182, 255, 182);
-            lblLegendRight.Text = "  Right only  ";
+            lblLegendRight.Text = "  ▷ Right only  ";
             lblLegendRight.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            lblLegendRight.Font = new System.Drawing.Font("Segoe UI", 9f);
 
             lblLegendSame.AutoSize = true;
-            lblLegendSame.Location = new System.Drawing.Point(326, 4);
+            lblLegendSame.Location = new System.Drawing.Point(370, 5);
             lblLegendSame.BackColor = System.Drawing.Color.White;
-            lblLegendSame.Text = "  Same  ";
+            lblLegendSame.Text = "  ✓ Same  ";
             lblLegendSame.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+            lblLegendSame.Font = new System.Drawing.Font("Segoe UI", 9f);
 
             // pnlFiles (SplitContainer)
             pnlFiles.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -160,11 +180,12 @@ namespace ParquetExplorer
 
             // lblLeftFile
             lblLeftFile.Dock = System.Windows.Forms.DockStyle.Top;
-            lblLeftFile.Height = 22;
-            lblLeftFile.Padding = new System.Windows.Forms.Padding(4, 3, 4, 0);
+            lblLeftFile.Height = 24;
+            lblLeftFile.Padding = new System.Windows.Forms.Padding(6, 4, 4, 0);
             lblLeftFile.Font = new System.Drawing.Font("Segoe UI", 9f, System.Drawing.FontStyle.Bold);
-            lblLeftFile.Text = "(no left file)";
-            lblLeftFile.BackColor = System.Drawing.Color.FromArgb(220, 235, 255);
+            lblLeftFile.Text = "Left file: (none selected)";
+            lblLeftFile.BackColor = System.Drawing.Color.FromArgb(210, 228, 255);
+            lblLeftFile.ForeColor = System.Drawing.Color.FromArgb(30, 60, 120);
 
             // dgvLeft
             dgvLeft.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -177,6 +198,19 @@ namespace ParquetExplorer
             dgvLeft.BorderStyle = System.Windows.Forms.BorderStyle.None;
             dgvLeft.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvLeft.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            dgvLeft.EnableHeadersVisualStyles = false;
+            dgvLeft.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(50, 80, 130);
+            dgvLeft.ColumnHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.White;
+            dgvLeft.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 9f, System.Drawing.FontStyle.Bold);
+            dgvLeft.ColumnHeadersDefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(50, 80, 130);
+            dgvLeft.ColumnHeadersDefaultCellStyle.SelectionForeColor = System.Drawing.Color.White;
+            dgvLeft.DefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(160, 195, 240);
+            dgvLeft.DefaultCellStyle.SelectionForeColor = System.Drawing.Color.FromArgb(20, 40, 80);
+            dgvLeft.DefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 9f);
+            dgvLeft.GridColor = System.Drawing.Color.FromArgb(220, 225, 235);
+            dgvLeft.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SingleHorizontal;
+            dgvLeft.BackgroundColor = System.Drawing.Color.White;
+            dgvLeft.CellFormatting += DgvLeft_CellFormatting;
             dgvLeft.CellDoubleClick += Dgv_CellDoubleClick;
             dgvLeft.CellToolTipTextNeeded += Dgv_CellToolTipTextNeeded;
             dgvLeft.Scroll += Dgv_Scroll;
@@ -190,11 +224,12 @@ namespace ParquetExplorer
 
             // lblRightFile
             lblRightFile.Dock = System.Windows.Forms.DockStyle.Top;
-            lblRightFile.Height = 22;
-            lblRightFile.Padding = new System.Windows.Forms.Padding(4, 3, 4, 0);
+            lblRightFile.Height = 24;
+            lblRightFile.Padding = new System.Windows.Forms.Padding(6, 4, 4, 0);
             lblRightFile.Font = new System.Drawing.Font("Segoe UI", 9f, System.Drawing.FontStyle.Bold);
-            lblRightFile.Text = "(no right file)";
-            lblRightFile.BackColor = System.Drawing.Color.FromArgb(220, 255, 220);
+            lblRightFile.Text = "Right file: (none selected)";
+            lblRightFile.BackColor = System.Drawing.Color.FromArgb(200, 240, 205);
+            lblRightFile.ForeColor = System.Drawing.Color.FromArgb(20, 80, 40);
 
             // dgvRight
             dgvRight.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -207,6 +242,19 @@ namespace ParquetExplorer
             dgvRight.BorderStyle = System.Windows.Forms.BorderStyle.None;
             dgvRight.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
             dgvRight.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
+            dgvRight.EnableHeadersVisualStyles = false;
+            dgvRight.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(40, 110, 60);
+            dgvRight.ColumnHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.White;
+            dgvRight.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 9f, System.Drawing.FontStyle.Bold);
+            dgvRight.ColumnHeadersDefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(40, 110, 60);
+            dgvRight.ColumnHeadersDefaultCellStyle.SelectionForeColor = System.Drawing.Color.White;
+            dgvRight.DefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(170, 230, 190);
+            dgvRight.DefaultCellStyle.SelectionForeColor = System.Drawing.Color.FromArgb(20, 70, 30);
+            dgvRight.DefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 9f);
+            dgvRight.GridColor = System.Drawing.Color.FromArgb(220, 225, 235);
+            dgvRight.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SingleHorizontal;
+            dgvRight.BackgroundColor = System.Drawing.Color.White;
+            dgvRight.CellFormatting += DgvRight_CellFormatting;
             dgvRight.CellDoubleClick += Dgv_CellDoubleClick;
             dgvRight.CellToolTipTextNeeded += Dgv_CellToolTipTextNeeded;
             dgvRight.Scroll += Dgv_Scroll;
@@ -214,8 +262,9 @@ namespace ParquetExplorer
 
             // pnlBottom
             pnlBottom.Dock = System.Windows.Forms.DockStyle.Bottom;
-            pnlBottom.Height = 36;
-            pnlBottom.Padding = new System.Windows.Forms.Padding(4);
+            pnlBottom.Height = 38;
+            pnlBottom.Padding = new System.Windows.Forms.Padding(6, 5, 6, 5);
+            pnlBottom.BackColor = System.Drawing.Color.FromArgb(248, 249, 252);
             pnlBottom.Controls.Add(lblPageInfo);
             pnlBottom.Controls.Add(btnNext);
             pnlBottom.Controls.Add(btnPrev);
@@ -223,34 +272,47 @@ namespace ParquetExplorer
             pnlBottom.Controls.Add(lblPageSizeLabel);
 
             // btnPrev
-            btnPrev.Text = "< Prev";
-            btnPrev.Size = new System.Drawing.Size(70, 26);
-            btnPrev.Location = new System.Drawing.Point(4, 4);
+            btnPrev.Text = "◀ Prev";
+            btnPrev.Size = new System.Drawing.Size(76, 26);
+            btnPrev.Location = new System.Drawing.Point(6, 5);
             btnPrev.Enabled = false;
+            btnPrev.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            btnPrev.BackColor = System.Drawing.Color.FromArgb(240, 243, 248);
+            btnPrev.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(190, 200, 215);
+            btnPrev.Font = new System.Drawing.Font("Segoe UI", 9f);
             btnPrev.Click += btnPrev_Click;
 
             // btnNext
-            btnNext.Text = "Next >";
-            btnNext.Size = new System.Drawing.Size(70, 26);
-            btnNext.Location = new System.Drawing.Point(78, 4);
+            btnNext.Text = "Next ▶";
+            btnNext.Size = new System.Drawing.Size(76, 26);
+            btnNext.Location = new System.Drawing.Point(86, 5);
             btnNext.Enabled = false;
+            btnNext.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            btnNext.BackColor = System.Drawing.Color.FromArgb(240, 243, 248);
+            btnNext.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(190, 200, 215);
+            btnNext.Font = new System.Drawing.Font("Segoe UI", 9f);
             btnNext.Click += btnNext_Click;
 
             // lblPageInfo
             lblPageInfo.AutoSize = false;
-            lblPageInfo.Location = new System.Drawing.Point(156, 8);
-            lblPageInfo.Size = new System.Drawing.Size(280, 20);
+            lblPageInfo.Location = new System.Drawing.Point(170, 9);
+            lblPageInfo.Size = new System.Drawing.Size(300, 20);
+            lblPageInfo.Font = new System.Drawing.Font("Segoe UI", 9f);
+            lblPageInfo.ForeColor = System.Drawing.Color.FromArgb(60, 80, 110);
             lblPageInfo.Text = "Page 1 of 1  (0 rows)";
 
             // lblPageSizeLabel
             lblPageSizeLabel.AutoSize = true;
-            lblPageSizeLabel.Location = new System.Drawing.Point(450, 8);
-            lblPageSizeLabel.Text = "Page size:";
+            lblPageSizeLabel.Location = new System.Drawing.Point(474, 9);
+            lblPageSizeLabel.Font = new System.Drawing.Font("Segoe UI", 9f);
+            lblPageSizeLabel.ForeColor = System.Drawing.Color.FromArgb(80, 100, 130);
+            lblPageSizeLabel.Text = "Rows per page:";
 
             // cmbPageSize
             cmbPageSize.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            cmbPageSize.Location = new System.Drawing.Point(520, 5);
+            cmbPageSize.Location = new System.Drawing.Point(570, 6);
             cmbPageSize.Size = new System.Drawing.Size(70, 24);
+            cmbPageSize.Font = new System.Drawing.Font("Segoe UI", 9f);
             cmbPageSize.Items.AddRange(new object[] { "10", "25", "50", "100", "500", "1000" });
             cmbPageSize.SelectedItem = "500";
             cmbPageSize.SelectedIndexChanged += cmbPageSize_SelectedIndexChanged;
@@ -259,7 +321,10 @@ namespace ParquetExplorer
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(1400, 800);
+            MinimumSize = new System.Drawing.Size(900, 600);
             Text = "Parquet File Comparison";
+            Font = new System.Drawing.Font("Segoe UI", 9f);
+            BackColor = System.Drawing.Color.FromArgb(248, 249, 252);
             Controls.Add(pnlFiles);
             Controls.Add(pnlBottom);
             Controls.Add(pnlLegend);

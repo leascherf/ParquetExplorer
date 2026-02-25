@@ -46,12 +46,15 @@ namespace ParquetExplorer
 
             if (dlg.ShowDialog() != DialogResult.OK) return;
 
-            lblStatus.Text = "Loading...";
+            toolStripStatusLabel1.Text = "Loading...";
             try
             {
                 await _explorer.LoadFileAsync(dlg.FileName);
 
-                lblFilePath.Text = dlg.FileName;
+                var fileInfo = new System.IO.FileInfo(dlg.FileName);
+                lblFilePath.Text = $"📄  {dlg.FileName}";
+                lblFilePath.ForeColor = System.Drawing.Color.FromArgb(40, 56, 72);
+                lblFilePath.Font = new System.Drawing.Font("Segoe UI", 9f);
 
                 // Populate filter-column dropdown
                 cmbFilterColumn.Items.Clear();
@@ -62,13 +65,13 @@ namespace ParquetExplorer
 
                 txtFilter.Text = string.Empty;
                 RefreshGrid();
-                lblStatus.Text = $"Loaded {_explorer.TotalRowCount:N0} rows";
+                toolStripStatusLabel1.Text = $"✓  Loaded {_explorer.TotalRowCount:N0} rows  |  {_explorer.ColumnNames.Count} columns  |  {fileInfo.Length / 1024.0 / 1024.0:F2} MB";
             }
             catch (Exception ex)
             {
                 MessageBox.Show($"Error loading file:\n{ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
-                lblStatus.Text = "Error loading file";
+                toolStripStatusLabel1.Text = "⚠  Error loading file";
             }
         }
 
@@ -89,7 +92,7 @@ namespace ParquetExplorer
 
             _explorer.ApplyFilter(txtFilter.Text.Trim(), columnName);
             RefreshGrid();
-            lblStatus.Text = $"Showing {_explorer.FilteredRowCount:N0} of {_explorer.TotalRowCount:N0} rows";
+            toolStripStatusLabel1.Text = $"🔍  Showing {_explorer.FilteredRowCount:N0} of {_explorer.TotalRowCount:N0} rows";
         }
 
         private void btnPrev_Click(object sender, EventArgs e)
