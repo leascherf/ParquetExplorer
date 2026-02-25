@@ -36,11 +36,12 @@ namespace ParquetExplorer.Services
                 var dataFields = schema.Fields.OfType<DataField>().ToArray();
                 var columnData = new (DataField Field, Array Data)[dataFields.Length];
 
+                var readTasks = dataFields
+                    .Select(field => rowGroupReader.ReadColumnAsync(field))
+                    .ToArray();
+                var columns = await Task.WhenAll(readTasks);
                 for (int ci = 0; ci < dataFields.Length; ci++)
-                {
-                    var dc = await rowGroupReader.ReadColumnAsync(dataFields[ci]);
-                    columnData[ci] = (dataFields[ci], (Array)dc.Data);
-                }
+                    columnData[ci] = (dataFields[ci], (Array)columns[ci].Data);
 
                 int rowCount = columnData.Length > 0 ? columnData[0].Data.Length : 0;
                 for (int r = 0; r < rowCount; r++)
