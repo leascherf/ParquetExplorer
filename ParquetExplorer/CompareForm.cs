@@ -50,7 +50,7 @@ namespace ParquetExplorer
         {
             var path = PickFile();
             if (path == null) return;
-            lblLeftFile.Text = path;
+            lblLeftFile.Text = $"◁ Left:  {path}";
             try { _leftTable = await _parquetService.LoadAsync(path); }
             catch (Exception ex) { MessageBox.Show($"Error loading left file:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }
@@ -59,7 +59,7 @@ namespace ParquetExplorer
         {
             var path = PickFile();
             if (path == null) return;
-            lblRightFile.Text = path;
+            lblRightFile.Text = $"▷ Right:  {path}";
             try { _rightTable = await _parquetService.LoadAsync(path); }
             catch (Exception ex) { MessageBox.Show($"Error loading right file:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }

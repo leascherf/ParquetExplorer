@@ -57,6 +57,8 @@ namespace ParquetExplorer
             menuStrip1.Name = "menuStrip1";
             menuStrip1.Size = new System.Drawing.Size(1200, 24);
             menuStrip1.TabIndex = 0;
+            menuStrip1.BackColor = System.Drawing.Color.FromArgb(40, 56, 72);
+            menuStrip1.ForeColor = System.Drawing.Color.White;
 
             // fileToolStripMenuItem
             fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[]
@@ -65,6 +67,7 @@ namespace ParquetExplorer
             });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             fileToolStripMenuItem.Text = "&File";
+            fileToolStripMenuItem.ForeColor = System.Drawing.Color.White;
 
             // openToolStripMenuItem
             openToolStripMenuItem.Name = "openToolStripMenuItem";
@@ -93,21 +96,27 @@ namespace ParquetExplorer
             });
             toolStrip1.Location = new System.Drawing.Point(0, 24);
             toolStrip1.Name = "toolStrip1";
-            toolStrip1.Size = new System.Drawing.Size(1200, 25);
+            toolStrip1.Size = new System.Drawing.Size(1200, 32);
             toolStrip1.TabIndex = 1;
+            toolStrip1.BackColor = System.Drawing.Color.FromArgb(248, 249, 252);
+            toolStrip1.GripStyle = System.Windows.Forms.ToolStripGripStyle.Hidden;
+            toolStrip1.RenderMode = System.Windows.Forms.ToolStripRenderMode.System;
+            toolStrip1.Padding = new System.Windows.Forms.Padding(4, 0, 4, 0);
 
             // btnOpen
             btnOpen.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             btnOpen.Name = "btnOpen";
-            btnOpen.Text = "Open";
-            btnOpen.ToolTipText = "Open Parquet File";
+            btnOpen.Text = "📂 Open";
+            btnOpen.ToolTipText = "Open Parquet File (Ctrl+O)";
+            btnOpen.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             btnOpen.Click += btnOpen_Click;
 
             // btnCompare
             btnCompare.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             btnCompare.Name = "btnCompare";
-            btnCompare.Text = "Compare";
+            btnCompare.Text = "⇄ Compare";
             btnCompare.ToolTipText = "Compare Two Parquet Files";
+            btnCompare.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             btnCompare.Click += btnCompare_Click;
 
             // toolStripSeparator2
@@ -136,13 +145,15 @@ namespace ParquetExplorer
             // btnApplyFilter
             btnApplyFilter.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             btnApplyFilter.Name = "btnApplyFilter";
-            btnApplyFilter.Text = "Apply Filter";
+            btnApplyFilter.Text = "🔍 Apply";
+            btnApplyFilter.ToolTipText = "Apply filter (press Enter in the filter box)";
             btnApplyFilter.Click += btnApplyFilter_Click;
 
             // btnShowEmptyColumns
             btnShowEmptyColumns.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             btnShowEmptyColumns.Name = "btnShowEmptyColumns";
             btnShowEmptyColumns.Text = "Show Empty Columns";
+            btnShowEmptyColumns.ToolTipText = "Toggle visibility of columns with no data";
             btnShowEmptyColumns.CheckOnClick = true;
             btnShowEmptyColumns.Click += btnShowEmptyColumns_Click;
 
@@ -156,24 +167,41 @@ namespace ParquetExplorer
             dataGridView1.Name = "dataGridView1";
             dataGridView1.RowHeadersWidth = 40;
             dataGridView1.ScrollBars = System.Windows.Forms.ScrollBars.Both;
-            dataGridView1.BackgroundColor = System.Drawing.SystemColors.Window;
+            dataGridView1.BackgroundColor = System.Drawing.Color.White;
             dataGridView1.BorderStyle = System.Windows.Forms.BorderStyle.None;
             dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridView1.EnableHeadersVisualStyles = false;
+            dataGridView1.ColumnHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(40, 56, 72);
+            dataGridView1.ColumnHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.White;
+            dataGridView1.ColumnHeadersDefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 9f, System.Drawing.FontStyle.Bold);
+            dataGridView1.ColumnHeadersDefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(40, 56, 72);
+            dataGridView1.ColumnHeadersDefaultCellStyle.SelectionForeColor = System.Drawing.Color.White;
+            dataGridView1.RowsDefaultCellStyle.BackColor = System.Drawing.Color.White;
+            dataGridView1.AlternatingRowsDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(245, 248, 255);
+            dataGridView1.DefaultCellStyle.SelectionBackColor = System.Drawing.Color.FromArgb(44, 123, 229);
+            dataGridView1.DefaultCellStyle.SelectionForeColor = System.Drawing.Color.White;
+            dataGridView1.DefaultCellStyle.Font = new System.Drawing.Font("Segoe UI", 9f);
+            dataGridView1.GridColor = System.Drawing.Color.FromArgb(220, 225, 235);
+            dataGridView1.RowHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(248, 249, 252);
+            dataGridView1.RowHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.FromArgb(100, 110, 120);
+            dataGridView1.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SingleHorizontal;
 
             // lblFilePath
             lblFilePath = new System.Windows.Forms.Label();
             lblFilePath.AutoSize = false;
             lblFilePath.Dock = System.Windows.Forms.DockStyle.Top;
-            lblFilePath.Height = 22;
-            lblFilePath.Padding = new System.Windows.Forms.Padding(4, 3, 4, 0);
+            lblFilePath.Height = 26;
+            lblFilePath.Padding = new System.Windows.Forms.Padding(8, 4, 4, 0);
             lblFilePath.Font = new System.Drawing.Font("Segoe UI", 9f, System.Drawing.FontStyle.Italic);
-            lblFilePath.ForeColor = System.Drawing.Color.DimGray;
-            lblFilePath.Text = "(no file loaded)";
+            lblFilePath.ForeColor = System.Drawing.Color.FromArgb(80, 100, 130);
+            lblFilePath.BackColor = System.Drawing.Color.FromArgb(240, 244, 251);
+            lblFilePath.Text = "(no file loaded — use File → Open Parquet or Ctrl+O)";
 
             // pnlBottom
             pnlBottom.Dock = System.Windows.Forms.DockStyle.Bottom;
-            pnlBottom.Height = 36;
-            pnlBottom.Padding = new System.Windows.Forms.Padding(4, 4, 4, 4);
+            pnlBottom.Height = 38;
+            pnlBottom.Padding = new System.Windows.Forms.Padding(6, 5, 6, 5);
+            pnlBottom.BackColor = System.Drawing.Color.FromArgb(248, 249, 252);
             pnlBottom.Controls.Add(lblPageInfo);
             pnlBottom.Controls.Add(btnNext);
             pnlBottom.Controls.Add(btnPrev);
@@ -181,34 +209,47 @@ namespace ParquetExplorer
             pnlBottom.Controls.Add(lblPageSizeLabel);
 
             // btnPrev
-            btnPrev.Text = "< Prev";
-            btnPrev.Size = new System.Drawing.Size(70, 26);
-            btnPrev.Location = new System.Drawing.Point(4, 4);
+            btnPrev.Text = "◀ Prev";
+            btnPrev.Size = new System.Drawing.Size(76, 26);
+            btnPrev.Location = new System.Drawing.Point(6, 5);
             btnPrev.Enabled = false;
+            btnPrev.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            btnPrev.BackColor = System.Drawing.Color.FromArgb(240, 243, 248);
+            btnPrev.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(190, 200, 215);
+            btnPrev.Font = new System.Drawing.Font("Segoe UI", 9f);
             btnPrev.Click += btnPrev_Click;
 
             // btnNext
-            btnNext.Text = "Next >";
-            btnNext.Size = new System.Drawing.Size(70, 26);
-            btnNext.Location = new System.Drawing.Point(78, 4);
+            btnNext.Text = "Next ▶";
+            btnNext.Size = new System.Drawing.Size(76, 26);
+            btnNext.Location = new System.Drawing.Point(86, 5);
             btnNext.Enabled = false;
+            btnNext.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            btnNext.BackColor = System.Drawing.Color.FromArgb(240, 243, 248);
+            btnNext.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(190, 200, 215);
+            btnNext.Font = new System.Drawing.Font("Segoe UI", 9f);
             btnNext.Click += btnNext_Click;
 
             // lblPageInfo
             lblPageInfo.AutoSize = false;
-            lblPageInfo.Location = new System.Drawing.Point(156, 8);
-            lblPageInfo.Size = new System.Drawing.Size(280, 20);
+            lblPageInfo.Location = new System.Drawing.Point(170, 9);
+            lblPageInfo.Size = new System.Drawing.Size(300, 20);
+            lblPageInfo.Font = new System.Drawing.Font("Segoe UI", 9f);
+            lblPageInfo.ForeColor = System.Drawing.Color.FromArgb(60, 80, 110);
             lblPageInfo.Text = "Page 1 of 1  (0 rows)";
 
             // lblPageSizeLabel
             lblPageSizeLabel.AutoSize = true;
-            lblPageSizeLabel.Location = new System.Drawing.Point(440, 8);
-            lblPageSizeLabel.Text = "Page size:";
+            lblPageSizeLabel.Location = new System.Drawing.Point(474, 9);
+            lblPageSizeLabel.Font = new System.Drawing.Font("Segoe UI", 9f);
+            lblPageSizeLabel.ForeColor = System.Drawing.Color.FromArgb(80, 100, 130);
+            lblPageSizeLabel.Text = "Rows per page:";
 
             // cmbPageSize
             cmbPageSize.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            cmbPageSize.Location = new System.Drawing.Point(510, 5);
+            cmbPageSize.Location = new System.Drawing.Point(570, 6);
             cmbPageSize.Size = new System.Drawing.Size(70, 24);
+            cmbPageSize.Font = new System.Drawing.Font("Segoe UI", 9f);
             cmbPageSize.Items.AddRange(new object[] { "10", "25", "50", "100", "500" });
             cmbPageSize.SelectedItem = "25";
             cmbPageSize.SelectedIndexChanged += cmbPageSize_SelectedIndexChanged;
@@ -217,8 +258,11 @@ namespace ParquetExplorer
             toolStripStatusLabel1.Name = "toolStripStatusLabel1";
             toolStripStatusLabel1.Spring = true;
             toolStripStatusLabel1.TextAlign = System.Drawing.ContentAlignment.MiddleLeft;
+            toolStripStatusLabel1.ForeColor = System.Drawing.Color.White;
             statusStrip1.Items.Add(toolStripStatusLabel1);
             statusStrip1.SizingGrip = true;
+            statusStrip1.BackColor = System.Drawing.Color.FromArgb(40, 56, 72);
+            statusStrip1.ForeColor = System.Drawing.Color.White;
 
             // lblStatus (alias for status label)
             lblStatus = new System.Windows.Forms.Label();
@@ -228,8 +272,11 @@ namespace ParquetExplorer
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(1200, 700);
+            MinimumSize = new System.Drawing.Size(900, 550);
             MainMenuStrip = menuStrip1;
             Text = "Parquet Explorer";
+            Font = new System.Drawing.Font("Segoe UI", 9f);
+            BackColor = System.Drawing.Color.FromArgb(248, 249, 252);
             Controls.Add(dataGridView1);
             Controls.Add(pnlBottom);
             Controls.Add(lblFilePath);
