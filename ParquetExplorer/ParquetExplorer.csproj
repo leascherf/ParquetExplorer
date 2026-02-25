@@ -11,7 +11,7 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
-    <PackageReference Include="Parquet.Net" Version="4.24.0" />
+    <PackageReference Include="Parquet.Net" Version="5.5.0" />
   </ItemGroup>
 
 </Project>
