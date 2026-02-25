@@ -4,12 +4,15 @@ using System.Drawing;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using ParquetExplorer.Models;
-using ParquetExplorer.Services;
+using ParquetExplorer.Services.Interfaces;
 
 namespace ParquetExplorer
 {
     public partial class CompareForm : Form
     {
+        private readonly IParquetService _parquetService;
+        private readonly ICompareService _compareService;
+
         private DataTable _leftTable  = new();
         private DataTable _rightTable = new();
 
@@ -21,8 +24,10 @@ namespace ParquetExplorer
         private List<Color> _leftColors  = new();
         private List<Color> _rightColors = new();
 
-        public CompareForm()
+        public CompareForm(IParquetService parquetService, ICompareService compareService)
         {
+            _parquetService = parquetService;
+            _compareService = compareService;
             InitializeComponent();
         }
 
@@ -31,7 +36,7 @@ namespace ParquetExplorer
             var path = PickFile();
             if (path == null) return;
             lblLeftFile.Text = path;
-            try { _leftTable = await ParquetService.LoadAsync(path); }
+            try { _leftTable = await _parquetService.LoadAsync(path); }
             catch (Exception ex) { MessageBox.Show($"Error loading left file:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }
 
@@ -40,7 +45,7 @@ namespace ParquetExplorer
             var path = PickFile();
             if (path == null) return;
             lblRightFile.Text = path;
-            try { _rightTable = await ParquetService.LoadAsync(path); }
+            try { _rightTable = await _parquetService.LoadAsync(path); }
             catch (Exception ex) { MessageBox.Show($"Error loading right file:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
         }
 
@@ -61,7 +66,7 @@ namespace ParquetExplorer
             if (_rightTable.Columns.Count == 0)
             { MessageBox.Show("Please open the right file first.", "Missing File", MessageBoxButtons.OK, MessageBoxIcon.Warning); return; }
 
-            var result = CompareService.Compare(_leftTable, _rightTable);
+            var result = _compareService.Compare(_leftTable, _rightTable);
             DisplayResult(result);
         }
 
