@@ -1,0 +1,211 @@
+namespace ParquetExplorer
+{
+    partial class CompareForm
+    {
+        private System.ComponentModel.IContainer components = null;
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing && (components != null))
+                components.Dispose();
+            base.Dispose(disposing);
+        }
+
+        private void InitializeComponent()
+        {
+            pnlTop = new System.Windows.Forms.Panel();
+            btnOpenLeft = new System.Windows.Forms.Button();
+            btnOpenRight = new System.Windows.Forms.Button();
+            btnCompare = new System.Windows.Forms.Button();
+
+            pnlFiles = new System.Windows.Forms.SplitContainer();
+            pnlLeftFile = new System.Windows.Forms.Panel();
+            lblLeftFile = new System.Windows.Forms.Label();
+            dgvLeft = new System.Windows.Forms.DataGridView();
+            pnlRightFile = new System.Windows.Forms.Panel();
+            lblRightFile = new System.Windows.Forms.Label();
+            dgvRight = new System.Windows.Forms.DataGridView();
+
+            pnlLegend = new System.Windows.Forms.Panel();
+            lblSummary = new System.Windows.Forms.Label();
+            lblLegendDiff = new System.Windows.Forms.Label();
+            lblLegendLeft = new System.Windows.Forms.Label();
+            lblLegendRight = new System.Windows.Forms.Label();
+            lblLegendSame = new System.Windows.Forms.Label();
+
+            pnlTop.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)pnlFiles).BeginInit();
+            pnlFiles.Panel1.SuspendLayout();
+            pnlFiles.Panel2.SuspendLayout();
+            pnlLeftFile.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvLeft).BeginInit();
+            pnlRightFile.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dgvRight).BeginInit();
+            pnlLegend.SuspendLayout();
+            SuspendLayout();
+
+            // pnlTop
+            pnlTop.Dock = System.Windows.Forms.DockStyle.Top;
+            pnlTop.Height = 40;
+            pnlTop.Padding = new System.Windows.Forms.Padding(4);
+            pnlTop.Controls.Add(btnOpenLeft);
+            pnlTop.Controls.Add(btnOpenRight);
+            pnlTop.Controls.Add(btnCompare);
+
+            // btnOpenLeft
+            btnOpenLeft.Text = "Open Left File";
+            btnOpenLeft.Location = new System.Drawing.Point(4, 6);
+            btnOpenLeft.Size = new System.Drawing.Size(120, 28);
+            btnOpenLeft.Click += btnOpenLeft_Click;
+
+            // btnOpenRight
+            btnOpenRight.Text = "Open Right File";
+            btnOpenRight.Location = new System.Drawing.Point(132, 6);
+            btnOpenRight.Size = new System.Drawing.Size(120, 28);
+            btnOpenRight.Click += btnOpenRight_Click;
+
+            // btnCompare
+            btnCompare.Text = "Compare";
+            btnCompare.Location = new System.Drawing.Point(264, 6);
+            btnCompare.Size = new System.Drawing.Size(90, 28);
+            btnCompare.BackColor = System.Drawing.Color.SteelBlue;
+            btnCompare.ForeColor = System.Drawing.Color.White;
+            btnCompare.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            btnCompare.Click += btnCompare_Click;
+
+            // pnlLegend
+            pnlLegend.Dock = System.Windows.Forms.DockStyle.Bottom;
+            pnlLegend.Height = 50;
+            pnlLegend.Padding = new System.Windows.Forms.Padding(4);
+            pnlLegend.Controls.Add(lblSummary);
+            pnlLegend.Controls.Add(lblLegendDiff);
+            pnlLegend.Controls.Add(lblLegendLeft);
+            pnlLegend.Controls.Add(lblLegendRight);
+            pnlLegend.Controls.Add(lblLegendSame);
+
+            // lblSummary
+            lblSummary.AutoSize = false;
+            lblSummary.Dock = System.Windows.Forms.DockStyle.Bottom;
+            lblSummary.Height = 20;
+            lblSummary.Text = "Open two files and click Compare.";
+            lblSummary.Padding = new System.Windows.Forms.Padding(4, 0, 0, 0);
+
+            // Legend labels
+            lblLegendDiff.AutoSize = true;
+            lblLegendDiff.Location = new System.Drawing.Point(4, 4);
+            lblLegendDiff.BackColor = System.Drawing.Color.FromArgb(255, 255, 180);
+            lblLegendDiff.Text = "  Different  ";
+            lblLegendDiff.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+
+            lblLegendLeft.AutoSize = true;
+            lblLegendLeft.Location = new System.Drawing.Point(110, 4);
+            lblLegendLeft.BackColor = System.Drawing.Color.FromArgb(255, 182, 182);
+            lblLegendLeft.Text = "  Left only  ";
+            lblLegendLeft.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+
+            lblLegendRight.AutoSize = true;
+            lblLegendRight.Location = new System.Drawing.Point(216, 4);
+            lblLegendRight.BackColor = System.Drawing.Color.FromArgb(182, 255, 182);
+            lblLegendRight.Text = "  Right only  ";
+            lblLegendRight.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+
+            lblLegendSame.AutoSize = true;
+            lblLegendSame.Location = new System.Drawing.Point(326, 4);
+            lblLegendSame.BackColor = System.Drawing.Color.White;
+            lblLegendSame.Text = "  Same  ";
+            lblLegendSame.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
+
+            // pnlFiles (SplitContainer)
+            pnlFiles.Dock = System.Windows.Forms.DockStyle.Fill;
+            pnlFiles.Orientation = System.Windows.Forms.Orientation.Vertical;
+            pnlFiles.SplitterDistance = 600;
+
+            // Left panel
+            pnlLeftFile.Dock = System.Windows.Forms.DockStyle.Fill;
+            pnlLeftFile.Controls.Add(dgvLeft);
+            pnlLeftFile.Controls.Add(lblLeftFile);
+            pnlFiles.Panel1.Controls.Add(pnlLeftFile);
+
+            // lblLeftFile
+            lblLeftFile.Dock = System.Windows.Forms.DockStyle.Top;
+            lblLeftFile.Height = 22;
+            lblLeftFile.Padding = new System.Windows.Forms.Padding(4, 3, 4, 0);
+            lblLeftFile.Font = new System.Drawing.Font("Segoe UI", 9f, System.Drawing.FontStyle.Bold);
+            lblLeftFile.Text = "(no left file)";
+            lblLeftFile.BackColor = System.Drawing.Color.FromArgb(220, 235, 255);
+
+            // dgvLeft
+            dgvLeft.Dock = System.Windows.Forms.DockStyle.Fill;
+            dgvLeft.AllowUserToAddRows = false;
+            dgvLeft.AllowUserToDeleteRows = false;
+            dgvLeft.ReadOnly = true;
+            dgvLeft.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            dgvLeft.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            dgvLeft.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            dgvLeft.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+
+            // Right panel
+            pnlRightFile.Dock = System.Windows.Forms.DockStyle.Fill;
+            pnlRightFile.Controls.Add(dgvRight);
+            pnlRightFile.Controls.Add(lblRightFile);
+            pnlFiles.Panel2.Controls.Add(pnlRightFile);
+
+            // lblRightFile
+            lblRightFile.Dock = System.Windows.Forms.DockStyle.Top;
+            lblRightFile.Height = 22;
+            lblRightFile.Padding = new System.Windows.Forms.Padding(4, 3, 4, 0);
+            lblRightFile.Font = new System.Drawing.Font("Segoe UI", 9f, System.Drawing.FontStyle.Bold);
+            lblRightFile.Text = "(no right file)";
+            lblRightFile.BackColor = System.Drawing.Color.FromArgb(220, 255, 220);
+
+            // dgvRight
+            dgvRight.Dock = System.Windows.Forms.DockStyle.Fill;
+            dgvRight.AllowUserToAddRows = false;
+            dgvRight.AllowUserToDeleteRows = false;
+            dgvRight.ReadOnly = true;
+            dgvRight.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            dgvRight.ScrollBars = System.Windows.Forms.ScrollBars.Both;
+            dgvRight.BorderStyle = System.Windows.Forms.BorderStyle.None;
+            dgvRight.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+
+            // CompareForm
+            AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
+            AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
+            ClientSize = new System.Drawing.Size(1400, 800);
+            Text = "Parquet File Comparison";
+            Controls.Add(pnlFiles);
+            Controls.Add(pnlLegend);
+            Controls.Add(pnlTop);
+
+            pnlTop.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)pnlFiles).EndInit();
+            pnlFiles.Panel1.ResumeLayout(false);
+            pnlFiles.Panel2.ResumeLayout(false);
+            pnlLeftFile.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvLeft).EndInit();
+            pnlRightFile.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dgvRight).EndInit();
+            pnlLegend.ResumeLayout(false);
+            pnlLegend.PerformLayout();
+            ResumeLayout(false);
+        }
+
+        private System.Windows.Forms.Panel pnlTop = null!;
+        private System.Windows.Forms.Button btnOpenLeft = null!;
+        private System.Windows.Forms.Button btnOpenRight = null!;
+        private System.Windows.Forms.Button btnCompare = null!;
+        private System.Windows.Forms.SplitContainer pnlFiles = null!;
+        private System.Windows.Forms.Panel pnlLeftFile = null!;
+        private System.Windows.Forms.Label lblLeftFile = null!;
+        private System.Windows.Forms.DataGridView dgvLeft = null!;
+        private System.Windows.Forms.Panel pnlRightFile = null!;
+        private System.Windows.Forms.Label lblRightFile = null!;
+        private System.Windows.Forms.DataGridView dgvRight = null!;
+        private System.Windows.Forms.Panel pnlLegend = null!;
+        private System.Windows.Forms.Label lblSummary = null!;
+        private System.Windows.Forms.Label lblLegendDiff = null!;
+        private System.Windows.Forms.Label lblLegendLeft = null!;
+        private System.Windows.Forms.Label lblLegendRight = null!;
+        private System.Windows.Forms.Label lblLegendSame = null!;
+    }
+}
