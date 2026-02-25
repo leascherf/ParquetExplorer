@@ -19,36 +19,60 @@ namespace ParquetExplorer.Services
             using var fileStream = File.OpenRead(filePath);
             using var reader = await ParquetReader.CreateAsync(fileStream);
             var schema = reader.Schema;
+            var dataFields = schema.DataFields;
 
-            foreach (var field in schema.Fields)
+            foreach (var df in dataFields)
             {
-                if (field is DataField df)
+                var clrType = Nullable.GetUnderlyingType(df.ClrType) ?? df.ClrType;
+                Type columnType;
+                try
                 {
-                    var col = new System.Data.DataColumn(df.Name, Nullable.GetUnderlyingType(df.ClrType) ?? df.ClrType);
-                    col.AllowDBNull = true;
-                    table.Columns.Add(col);
+                    // Verify DataColumn supports this CLR type; fall back to string if not.
+                    _ = new System.Data.DataColumn("__probe__", clrType);
+                    columnType = clrType;
                 }
+                catch
+                {
+                    columnType = typeof(string);
+                }
+                var col = new System.Data.DataColumn(df.Name, columnType);
+                col.AllowDBNull = true;
+                table.Columns.Add(col);
             }
 
             for (int rg = 0; rg < reader.RowGroupCount; rg++)
             {
                 using var rowGroupReader = reader.OpenRowGroupReader(rg);
-                var dataFields = schema.Fields.OfType<DataField>().ToArray();
-                var columnData = new (DataField Field, Array Data)[dataFields.Length];
+                var columnData = new (DataField Field, Array? Data)[dataFields.Length];
 
                 for (int ci = 0; ci < dataFields.Length; ci++)
                 {
-                    var dc = await rowGroupReader.ReadColumnAsync(dataFields[ci]);
-                    columnData[ci] = (dataFields[ci], (Array)dc.Data);
+                    try
+                    {
+                        var dc = await rowGroupReader.ReadColumnAsync(dataFields[ci]);
+                        columnData[ci] = (dataFields[ci], (Array)dc.Data);
+                    }
+                    catch
+                    {
+                        // Column could not be read; leave Data as null and fill with DBNull below.
+                        columnData[ci] = (dataFields[ci], null);
+                    }
                 }
 
-                int rowCount = columnData.Length > 0 ? columnData[0].Data.Length : 0;
+                // Determine row count from the shortest successfully-read column to stay in bounds.
+                int rowCount = columnData
+                    .Where(c => c.Data != null)
+                    .Select(c => c.Data!.Length)
+                    .DefaultIfEmpty(0)
+                    .Min();
+
                 for (int r = 0; r < rowCount; r++)
                 {
                     var row = table.NewRow();
                     for (int ci = 0; ci < columnData.Length; ci++)
                     {
-                        var val = columnData[ci].Data.GetValue(r);
+                        var data = columnData[ci].Data;
+                        var val = (data != null && r < data.Length) ? data.GetValue(r) : null;
                         row[ci] = val ?? DBNull.Value;
                     }
                     table.Rows.Add(row);
