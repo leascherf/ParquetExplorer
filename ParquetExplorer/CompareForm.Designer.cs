@@ -35,6 +35,12 @@ namespace ParquetExplorer
             lblLegendLeft = new System.Windows.Forms.Label();
             lblLegendRight = new System.Windows.Forms.Label();
             lblLegendSame = new System.Windows.Forms.Label();
+            pnlBottom = new System.Windows.Forms.Panel();
+            btnPrev = new System.Windows.Forms.Button();
+            btnNext = new System.Windows.Forms.Button();
+            lblPageInfo = new System.Windows.Forms.Label();
+            lblPageSizeLabel = new System.Windows.Forms.Label();
+            cmbPageSize = new System.Windows.Forms.ComboBox();
 
             pnlTop.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)pnlFiles).BeginInit();
@@ -170,9 +176,11 @@ namespace ParquetExplorer
             dgvLeft.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             dgvLeft.BorderStyle = System.Windows.Forms.BorderStyle.None;
             dgvLeft.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvLeft.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             dgvLeft.CellDoubleClick += Dgv_CellDoubleClick;
             dgvLeft.CellToolTipTextNeeded += Dgv_CellToolTipTextNeeded;
             dgvLeft.Scroll += Dgv_Scroll;
+            dgvLeft.SelectionChanged += Dgv_SelectionChanged;
 
             // Right panel
             pnlRightFile.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -198,9 +206,54 @@ namespace ParquetExplorer
             dgvRight.ScrollBars = System.Windows.Forms.ScrollBars.Both;
             dgvRight.BorderStyle = System.Windows.Forms.BorderStyle.None;
             dgvRight.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dgvRight.SelectionMode = System.Windows.Forms.DataGridViewSelectionMode.FullRowSelect;
             dgvRight.CellDoubleClick += Dgv_CellDoubleClick;
             dgvRight.CellToolTipTextNeeded += Dgv_CellToolTipTextNeeded;
             dgvRight.Scroll += Dgv_Scroll;
+            dgvRight.SelectionChanged += Dgv_SelectionChanged;
+
+            // pnlBottom
+            pnlBottom.Dock = System.Windows.Forms.DockStyle.Bottom;
+            pnlBottom.Height = 36;
+            pnlBottom.Padding = new System.Windows.Forms.Padding(4);
+            pnlBottom.Controls.Add(lblPageInfo);
+            pnlBottom.Controls.Add(btnNext);
+            pnlBottom.Controls.Add(btnPrev);
+            pnlBottom.Controls.Add(cmbPageSize);
+            pnlBottom.Controls.Add(lblPageSizeLabel);
+
+            // btnPrev
+            btnPrev.Text = "< Prev";
+            btnPrev.Size = new System.Drawing.Size(70, 26);
+            btnPrev.Location = new System.Drawing.Point(4, 4);
+            btnPrev.Enabled = false;
+            btnPrev.Click += btnPrev_Click;
+
+            // btnNext
+            btnNext.Text = "Next >";
+            btnNext.Size = new System.Drawing.Size(70, 26);
+            btnNext.Location = new System.Drawing.Point(78, 4);
+            btnNext.Enabled = false;
+            btnNext.Click += btnNext_Click;
+
+            // lblPageInfo
+            lblPageInfo.AutoSize = false;
+            lblPageInfo.Location = new System.Drawing.Point(156, 8);
+            lblPageInfo.Size = new System.Drawing.Size(280, 20);
+            lblPageInfo.Text = "Page 1 of 1  (0 rows)";
+
+            // lblPageSizeLabel
+            lblPageSizeLabel.AutoSize = true;
+            lblPageSizeLabel.Location = new System.Drawing.Point(450, 8);
+            lblPageSizeLabel.Text = "Page size:";
+
+            // cmbPageSize
+            cmbPageSize.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            cmbPageSize.Location = new System.Drawing.Point(520, 5);
+            cmbPageSize.Size = new System.Drawing.Size(70, 24);
+            cmbPageSize.Items.AddRange(new object[] { "10", "25", "50", "100", "500", "1000" });
+            cmbPageSize.SelectedItem = "500";
+            cmbPageSize.SelectedIndexChanged += cmbPageSize_SelectedIndexChanged;
 
             // CompareForm
             AutoScaleDimensions = new System.Drawing.SizeF(7F, 15F);
@@ -208,6 +261,7 @@ namespace ParquetExplorer
             ClientSize = new System.Drawing.Size(1400, 800);
             Text = "Parquet File Comparison";
             Controls.Add(pnlFiles);
+            Controls.Add(pnlBottom);
             Controls.Add(pnlLegend);
             Controls.Add(pnlTop);
 
@@ -221,6 +275,8 @@ namespace ParquetExplorer
             ((System.ComponentModel.ISupportInitialize)dgvRight).EndInit();
             pnlLegend.ResumeLayout(false);
             pnlLegend.PerformLayout();
+            pnlBottom.ResumeLayout(false);
+            pnlBottom.PerformLayout();
             ResumeLayout(false);
         }
 
@@ -244,5 +300,11 @@ namespace ParquetExplorer
         private System.Windows.Forms.Label lblLegendLeft = null!;
         private System.Windows.Forms.Label lblLegendRight = null!;
         private System.Windows.Forms.Label lblLegendSame = null!;
+        private System.Windows.Forms.Panel pnlBottom = null!;
+        private System.Windows.Forms.Button btnPrev = null!;
+        private System.Windows.Forms.Button btnNext = null!;
+        private System.Windows.Forms.Label lblPageInfo = null!;
+        private System.Windows.Forms.Label lblPageSizeLabel = null!;
+        private System.Windows.Forms.ComboBox cmbPageSize = null!;
     }
 }

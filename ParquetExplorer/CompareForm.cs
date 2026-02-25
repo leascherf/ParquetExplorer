@@ -23,7 +23,11 @@ namespace ParquetExplorer
 
         private static readonly Color ColorDifferent = Color.FromArgb(255, 255, 180);
         private static readonly Color ColorLeftOnly = Color.FromArgb(255, 182, 182);
-        private static readonly Color ColorRightOnly = Color.FromArgb(182, 255, 182);
+        private readonly Color ColorRightOnly = Color.FromArgb(182, 255, 182);
+
+        private int _currentPage = 1;
+        private int _pageSize = 500;
+        private int _totalPages = 1;
         private static readonly Color ColorSame = Color.White;
 
         private List<Color> _leftColors = new();
@@ -152,13 +156,42 @@ namespace ParquetExplorer
 
             _currentDisplayedDiffs = filteredRows;
 
+            _currentPage = 1;
+            RenderCurrentPage();
+
+            int total = _lastResult.Rows.Count;
+            double matchPerc = total > 0 ? (double)_lastResult.SameCount / total * 100 : 0;
+            double diffPerc = total > 0 ? (double)_lastResult.DiffCount / total * 100 : 0;
+            double leftPerc = total > 0 ? (double)_lastResult.LeftOnlyCount / total * 100 : 0;
+            double rightPerc = total > 0 ? (double)_lastResult.RightOnlyCount / total * 100 : 0;
+
+            lblSummary.Text =
+                $"Total Aligned Rows: {total:N0} (100%)\r\n" +
+                $"✓ Matches (Same): {matchPerc:F2}% ({_lastResult.SameCount:N0})   |   ⚠️ Partials (Different): {diffPerc:F2}% ({_lastResult.DiffCount:N0})\r\n" +
+                $"◁ Left Only: {leftPerc:F2}% ({_lastResult.LeftOnlyCount:N0})   |   ▷ Right Only: {rightPerc:F2}% ({_lastResult.RightOnlyCount:N0})";
+        }
+
+        private void RenderCurrentPage()
+        {
+            if (_currentDisplayedDiffs == null || _lastResult == null) return;
+
+            int totalRows = _currentDisplayedDiffs.Count;
+            _totalPages = (int)Math.Ceiling(totalRows / (double)_pageSize);
+            if (_totalPages < 1) _totalPages = 1;
+            if (_currentPage > _totalPages) _currentPage = _totalPages;
+
+            var pageRows = _currentDisplayedDiffs
+                .Skip((_currentPage - 1) * _pageSize)
+                .Take(_pageSize)
+                .ToList();
+
             var leftDisplay = BuildDisplayTable(_lastResult.AllColumns);
             var rightDisplay = BuildDisplayTable(_lastResult.AllColumns);
 
-            _leftColors = new List<Color>(filteredRows.Count);
-            _rightColors = new List<Color>(filteredRows.Count);
+            _leftColors = new List<Color>(pageRows.Count);
+            _rightColors = new List<Color>(pageRows.Count);
 
-            foreach (var diff in filteredRows)
+            foreach (var diff in pageRows)
             {
                 Color color = diff.Status switch
                 {
@@ -178,23 +211,44 @@ namespace ParquetExplorer
             dgvLeft.DataSource = leftDisplay;
             dgvRight.DataSource = rightDisplay;
 
-
-
             AdjustColumnWidths(dgvLeft);
             AdjustColumnWidths(dgvRight);
             UpdateColumnVisibility();
 
-            int total = _lastResult.Rows.Count;
-            double matchPerc = total > 0 ? (double)_lastResult.SameCount / total * 100 : 0;
-            double diffPerc = total > 0 ? (double)_lastResult.DiffCount / total * 100 : 0;
-            double leftPerc = total > 0 ? (double)_lastResult.LeftOnlyCount / total * 100 : 0;
-            double rightPerc = total > 0 ? (double)_lastResult.RightOnlyCount / total * 100 : 0;
-
-            lblSummary.Text =
-                $"Total Aligned Rows: {total:N0} (100%)\r\n" +
-                $"✓ Matches (Same): {matchPerc:F2}% ({_lastResult.SameCount:N0})   |   ⚠️ Partials (Different): {diffPerc:F2}% ({_lastResult.DiffCount:N0})\r\n" +
-                $"◁ Left Only: {leftPerc:F2}% ({_lastResult.LeftOnlyCount:N0})   |   ▷ Right Only: {rightPerc:F2}% ({_lastResult.RightOnlyCount:N0})";
+            lblPageInfo.Text = $"Page {_currentPage} of {_totalPages}  ({totalRows:N0} rows)";
+            btnPrev.Enabled = _currentPage > 1;
+            btnNext.Enabled = _currentPage < _totalPages;
         }
+
+        private void btnPrev_Click(object sender, EventArgs e)
+        {
+            if (_currentPage > 1)
+            {
+                _currentPage--;
+                RenderCurrentPage();
+            }
+        }
+
+        private void btnNext_Click(object sender, EventArgs e)
+        {
+            if (_currentPage < _totalPages)
+            {
+                _currentPage++;
+                RenderCurrentPage();
+            }
+        }
+
+        private void cmbPageSize_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            if (int.TryParse(cmbPageSize.SelectedItem?.ToString(), out int ps))
+            {
+                _pageSize = ps;
+                _currentPage = 1;
+                RenderCurrentPage();
+            }
+        }
+
+
 
         private void DgvLeft_CellFormatting(object? sender, DataGridViewCellFormattingEventArgs e)
         {
@@ -411,6 +465,44 @@ namespace ParquetExplorer
             finally
             {
                 _isScrolling = false;
+            }
+        }
+
+        private bool _isSelecting = false;
+
+        private void Dgv_SelectionChanged(object? sender, EventArgs e)
+        {
+            if (_isSelecting) return;
+
+            var sourceGrid = sender as DataGridView;
+            var targetGrid = sourceGrid == dgvLeft ? dgvRight : dgvLeft;
+
+            if (sourceGrid == null || targetGrid == null || sourceGrid.CurrentRow == null) return;
+
+            try
+            {
+                _isSelecting = true;
+
+                int rowIndex = sourceGrid.CurrentRow.Index;
+                if (rowIndex >= 0 && rowIndex < targetGrid.Rows.Count)
+                {
+                    targetGrid.ClearSelection();
+                    targetGrid.Rows[rowIndex].Selected = true;
+
+                    int colIndex = sourceGrid.CurrentCell?.ColumnIndex ?? -1;
+                    if (colIndex >= 0 && colIndex < targetGrid.Columns.Count && targetGrid.Columns[colIndex].Visible)
+                    {
+                        targetGrid.CurrentCell = targetGrid.Rows[rowIndex].Cells[colIndex];
+                    }
+                }
+            }
+            catch
+            {
+                // Ignore any selection synchronization edge cases
+            }
+            finally
+            {
+                _isSelecting = false;
             }
         }
     }

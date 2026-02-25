@@ -29,6 +29,7 @@ namespace ParquetExplorer
             lblColumnLabel = new System.Windows.Forms.ToolStripLabel();
             cmbFilterColumn = new System.Windows.Forms.ToolStripComboBox();
             btnApplyFilter = new System.Windows.Forms.ToolStripButton();
+            btnShowEmptyColumns = new System.Windows.Forms.ToolStripButton();
 
             dataGridView1 = new System.Windows.Forms.DataGridView();
             pnlBottom = new System.Windows.Forms.Panel();
@@ -88,7 +89,7 @@ namespace ParquetExplorer
             toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[]
             {
                 btnOpen, btnCompare, toolStripSeparator2,
-                lblFilterLabel, txtFilter, lblColumnLabel, cmbFilterColumn, btnApplyFilter
+                lblFilterLabel, txtFilter, lblColumnLabel, cmbFilterColumn, btnApplyFilter, btnShowEmptyColumns
             });
             toolStrip1.Location = new System.Drawing.Point(0, 24);
             toolStrip1.Name = "toolStrip1";
@@ -138,11 +139,19 @@ namespace ParquetExplorer
             btnApplyFilter.Text = "Apply Filter";
             btnApplyFilter.Click += btnApplyFilter_Click;
 
+            // btnShowEmptyColumns
+            btnShowEmptyColumns.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            btnShowEmptyColumns.Name = "btnShowEmptyColumns";
+            btnShowEmptyColumns.Text = "Show Empty Columns";
+            btnShowEmptyColumns.CheckOnClick = true;
+            btnShowEmptyColumns.Click += btnShowEmptyColumns_Click;
+
             // dataGridView1
             dataGridView1.AllowUserToAddRows = false;
             dataGridView1.AllowUserToDeleteRows = false;
             dataGridView1.ReadOnly = true;
-            dataGridView1.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.Fill;
+            dataGridView1.AllowUserToResizeColumns = true;
+            dataGridView1.AutoSizeColumnsMode = System.Windows.Forms.DataGridViewAutoSizeColumnsMode.None;
             dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
             dataGridView1.Name = "dataGridView1";
             dataGridView1.RowHeadersWidth = 40;
@@ -256,6 +265,7 @@ namespace ParquetExplorer
         private System.Windows.Forms.ToolStripLabel lblColumnLabel = null!;
         private System.Windows.Forms.ToolStripComboBox cmbFilterColumn = null!;
         private System.Windows.Forms.ToolStripButton btnApplyFilter = null!;
+        private System.Windows.Forms.ToolStripButton btnShowEmptyColumns = null!;
         private System.Windows.Forms.DataGridView dataGridView1 = null!;
         private System.Windows.Forms.Panel pnlBottom = null!;
         private System.Windows.Forms.Button btnPrev = null!;
