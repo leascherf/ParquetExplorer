@@ -12,14 +12,16 @@ namespace ParquetExplorer
         private readonly ICompareService _compareService;
         private readonly IAzureBlobService _azureBlobService;
         private readonly IAzureAccountService _azureAccountService;
+        private readonly IAzureSessionManager _sessionManager;
 
-        public MainForm(IExplorerService explorer, IParquetService parquetService, ICompareService compareService, IAzureBlobService azureBlobService, IAzureAccountService azureAccountService)
+        public MainForm(IExplorerService explorer, IParquetService parquetService, ICompareService compareService, IAzureBlobService azureBlobService, IAzureAccountService azureAccountService, IAzureSessionManager sessionManager)
         {
             _explorer = explorer;
             _parquetService = parquetService;
             _compareService = compareService;
             _azureBlobService = azureBlobService;
             _azureAccountService = azureAccountService;
+            _sessionManager = sessionManager;
             InitializeComponent();
             EnableDoubleBuffer(dataGridView1);
         }
@@ -95,7 +97,7 @@ namespace ParquetExplorer
                 ? _azureAccountService.GetCachedCredential()
                 : null;
 
-            using var dlg = new AzureSignInBrowseForm(_azureAccountService, _azureBlobService, credential);
+            using var dlg = new AzureSignInBrowseForm(_azureAccountService, _azureBlobService, _sessionManager, credential);
             if (dlg.ShowDialog(this) != DialogResult.OK) return;
 
             string? tempFile = dlg.SelectedTempFilePath;

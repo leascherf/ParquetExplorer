@@ -32,6 +32,7 @@ static class Program
         services.AddSingleton<IExplorerService, ExplorerService>();
         services.AddSingleton<IAzureBlobService, AzureBlobService>();
         services.AddSingleton<IAzureAccountService, AzureAccountService>();
+        services.AddSingleton<IAzureSessionManager, AzureSessionManager>();
 
         // Register forms as transient so each resolve creates a fresh instance
         services.AddTransient<MainForm>();
