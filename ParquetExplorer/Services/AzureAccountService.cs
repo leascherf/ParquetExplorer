@@ -1,3 +1,4 @@
+using Azure.Core;
 using Azure.Identity;
 using Azure.ResourceManager.Storage;
 using ParquetExplorer.Models;
@@ -26,22 +27,21 @@ namespace ParquetExplorer.Services
         public bool IsSignedIn => _clientFactory.IsSignedIn;
 
         /// <inheritdoc/>
-        public Task SignInAsync(CancellationToken cancellationToken = default)
+        public async Task SignInAsync(CancellationToken cancellationToken = default)
         {
-            // InteractiveBrowserCredential opens the default browser for OAuth sign-in.
-            // The browser prompt is deferred until the first GetTokenAsync call (lazy).
-            // MSAL serialises concurrent token requests internally, so if multiple
-            // Azure SDK operations are initiated before the first token is acquired they
-            // will all queue behind the same browser interaction rather than opening
-            // multiple windows.
-            //
-            // Storing the credential in the factory ensures that every Azure SDK client
-            // created afterwards (ArmClient, BlobServiceClient, …) shares the same MSAL
-            // session and can silently acquire tokens for additional scopes without
-            // prompting the user again.
             var credential = new InteractiveBrowserCredential();
+
+            // Eagerly acquire the management-plane token so that the browser interaction
+            // happens exactly here, during the explicit "Sign in" action.
+            // After this call the underlying MSAL PublicClientApplication has a cached
+            // account + refresh token.  When the data-plane (storage) token is needed
+            // later, MSAL uses the cached refresh token silently — no second browser
+            // prompt appears.
+            await credential.GetTokenAsync(
+                new TokenRequestContext(new[] { "https://management.azure.com/.default" }),
+                cancellationToken);
+
             _clientFactory.SetCredential(credential);
-            return Task.CompletedTask;
         }
 
         /// <inheritdoc/>

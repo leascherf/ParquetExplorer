@@ -34,6 +34,7 @@ namespace ParquetExplorer
             btnShowEmptyColumns = new System.Windows.Forms.ToolStripButton();
 
             dataGridView1 = new System.Windows.Forms.DataGridView();
+            splitContainerAzure = new System.Windows.Forms.SplitContainer();
             pnlBottom = new System.Windows.Forms.Panel();
             btnPrev = new System.Windows.Forms.Button();
             btnNext = new System.Windows.Forms.Button();
@@ -49,6 +50,8 @@ namespace ParquetExplorer
             menuStrip1.SuspendLayout();
             toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)splitContainerAzure).BeginInit();
+            splitContainerAzure.Panel2.SuspendLayout();
             pnlBottom.SuspendLayout();
             statusStrip1.SuspendLayout();
             SuspendLayout();
@@ -202,6 +205,16 @@ namespace ParquetExplorer
             dataGridView1.RowHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.FromArgb(100, 110, 120);
             dataGridView1.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SingleHorizontal;
 
+            // splitContainerAzure
+            splitContainerAzure.Dock = System.Windows.Forms.DockStyle.Fill;
+            splitContainerAzure.Name = "splitContainerAzure";
+            splitContainerAzure.Orientation = System.Windows.Forms.Orientation.Vertical;
+            splitContainerAzure.SplitterWidth = 4;
+            splitContainerAzure.Panel1MinSize = 220;
+            splitContainerAzure.Panel2MinSize = 300;
+            splitContainerAzure.Panel2.Controls.Add(dataGridView1);
+            splitContainerAzure.SplitterDistance = 280;
+
             // lblFilePath
             lblFilePath = new System.Windows.Forms.Label();
             lblFilePath.AutoSize = false;
@@ -293,7 +306,7 @@ namespace ParquetExplorer
             Text = "Parquet Explorer";
             Font = new System.Drawing.Font("Segoe UI", 9f);
             BackColor = System.Drawing.Color.FromArgb(248, 249, 252);
-            Controls.Add(dataGridView1);
+            Controls.Add(splitContainerAzure);
             Controls.Add(pnlBottom);
             Controls.Add(lblFilePath);
             Controls.Add(toolStrip1);
@@ -305,6 +318,8 @@ namespace ParquetExplorer
             toolStrip1.ResumeLayout(false);
             toolStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
+            splitContainerAzure.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)splitContainerAzure).EndInit();
             pnlBottom.ResumeLayout(false);
             pnlBottom.PerformLayout();
             statusStrip1.ResumeLayout(false);
@@ -332,6 +347,7 @@ namespace ParquetExplorer
         private System.Windows.Forms.ToolStripButton btnApplyFilter = null!;
         private System.Windows.Forms.ToolStripButton btnShowEmptyColumns = null!;
         private System.Windows.Forms.DataGridView dataGridView1 = null!;
+        private System.Windows.Forms.SplitContainer splitContainerAzure = null!;
         private System.Windows.Forms.Panel pnlBottom = null!;
         private System.Windows.Forms.Button btnPrev = null!;
         private System.Windows.Forms.Button btnNext = null!;
