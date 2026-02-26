@@ -209,9 +209,6 @@ namespace ParquetExplorer
             splitContainerAzure.Dock = System.Windows.Forms.DockStyle.Fill;
             splitContainerAzure.Name = "splitContainerAzure";
             splitContainerAzure.Orientation = System.Windows.Forms.Orientation.Vertical;
-            splitContainerAzure.SplitterWidth = 4;
-            splitContainerAzure.Panel1MinSize = 220;
-            splitContainerAzure.Panel2MinSize = 300;
             splitContainerAzure.Panel2.Controls.Add(dataGridView1);
 
             // lblFilePath

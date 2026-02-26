@@ -39,9 +39,16 @@ namespace ParquetExplorer
             // Start with the Azure panel collapsed; it expands on demand.
             splitContainerAzure.Panel1Collapsed = true;
 
-            // SplitterDistance must be set after the form has its actual width.
+            // SplitterWidth, Panel1MinSize, Panel2MinSize and SplitterDistance must be set
+            // after the form has its actual width; setting them inside BeginInit/EndInit
+            // causes an InvalidOperationException because the control's default width (150)
+            // is smaller than Panel1MinSize + Panel2MinSize + SplitterWidth.
             Load += (_, _) =>
             {
+                splitContainerAzure.SplitterWidth = 4;
+                splitContainerAzure.Panel1MinSize = 220;
+                splitContainerAzure.Panel2MinSize = 300;
+
                 int desired = 280;
                 int max = splitContainerAzure.Width
                           - splitContainerAzure.Panel2MinSize
