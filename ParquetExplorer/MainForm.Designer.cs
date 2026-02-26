@@ -17,7 +17,6 @@ namespace ParquetExplorer
             fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             openAzureToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            openAzureSignInToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             compareToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -25,7 +24,6 @@ namespace ParquetExplorer
             toolStrip1 = new System.Windows.Forms.ToolStrip();
             btnOpen = new System.Windows.Forms.ToolStripButton();
             btnOpenAzure = new System.Windows.Forms.ToolStripButton();
-            btnOpenAzureSignIn = new System.Windows.Forms.ToolStripButton();
             btnCompare = new System.Windows.Forms.ToolStripButton();
             toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             lblFilterLabel = new System.Windows.Forms.ToolStripLabel();
@@ -36,6 +34,7 @@ namespace ParquetExplorer
             btnShowEmptyColumns = new System.Windows.Forms.ToolStripButton();
 
             dataGridView1 = new System.Windows.Forms.DataGridView();
+            splitContainerAzure = new System.Windows.Forms.SplitContainer();
             pnlBottom = new System.Windows.Forms.Panel();
             btnPrev = new System.Windows.Forms.Button();
             btnNext = new System.Windows.Forms.Button();
@@ -51,6 +50,8 @@ namespace ParquetExplorer
             menuStrip1.SuspendLayout();
             toolStrip1.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)splitContainerAzure).BeginInit();
+            splitContainerAzure.Panel2.SuspendLayout();
             pnlBottom.SuspendLayout();
             statusStrip1.SuspendLayout();
             SuspendLayout();
@@ -67,7 +68,7 @@ namespace ParquetExplorer
             // fileToolStripMenuItem
             fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[]
             {
-                openToolStripMenuItem, openAzureToolStripMenuItem, openAzureSignInToolStripMenuItem, compareToolStripMenuItem, toolStripSeparator1, exitToolStripMenuItem
+                openToolStripMenuItem, openAzureToolStripMenuItem, compareToolStripMenuItem, toolStripSeparator1, exitToolStripMenuItem
             });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             fileToolStripMenuItem.Text = "&File";
@@ -82,13 +83,8 @@ namespace ParquetExplorer
             // openAzureToolStripMenuItem
             openAzureToolStripMenuItem.Name = "openAzureToolStripMenuItem";
             openAzureToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.Shift | System.Windows.Forms.Keys.O;
-            openAzureToolStripMenuItem.Text = "Open from &Azure Blob Storage...";
+            openAzureToolStripMenuItem.Text = "Open from &Azure (Sign In)...";
             openAzureToolStripMenuItem.Click += openAzureToolStripMenuItem_Click;
-
-            // openAzureSignInToolStripMenuItem
-            openAzureSignInToolStripMenuItem.Name = "openAzureSignInToolStripMenuItem";
-            openAzureSignInToolStripMenuItem.Text = "Open from Azure (Sign &In)...";
-            openAzureSignInToolStripMenuItem.Click += openAzureSignInToolStripMenuItem_Click;
 
             // compareToolStripMenuItem
             compareToolStripMenuItem.Name = "compareToolStripMenuItem";
@@ -106,7 +102,7 @@ namespace ParquetExplorer
             // toolStrip1
             toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[]
             {
-                btnOpen, btnOpenAzure, btnOpenAzureSignIn, btnCompare, toolStripSeparator2,
+                btnOpen, btnOpenAzure, btnCompare, toolStripSeparator2,
                 lblFilterLabel, txtFilter, lblColumnLabel, cmbFilterColumn, btnApplyFilter, btnShowEmptyColumns
             });
             toolStrip1.Location = new System.Drawing.Point(0, 24);
@@ -130,17 +126,9 @@ namespace ParquetExplorer
             btnOpenAzure.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             btnOpenAzure.Name = "btnOpenAzure";
             btnOpenAzure.Text = "☁ Open Azure";
-            btnOpenAzure.ToolTipText = "Open Parquet from Azure Blob Storage (Ctrl+Shift+O)";
+            btnOpenAzure.ToolTipText = "Open Parquet from Azure — sign in or reuse existing session (Ctrl+Shift+O)";
             btnOpenAzure.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             btnOpenAzure.Click += btnOpenAzure_Click;
-
-            // btnOpenAzureSignIn
-            btnOpenAzureSignIn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
-            btnOpenAzureSignIn.Name = "btnOpenAzureSignIn";
-            btnOpenAzureSignIn.Text = "🔑 Azure Sign In";
-            btnOpenAzureSignIn.ToolTipText = "Open Parquet from Azure (sign in with your account)";
-            btnOpenAzureSignIn.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
-            btnOpenAzureSignIn.Click += btnOpenAzureSignIn_Click;
 
             // btnCompare
             btnCompare.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
@@ -216,6 +204,12 @@ namespace ParquetExplorer
             dataGridView1.RowHeadersDefaultCellStyle.BackColor = System.Drawing.Color.FromArgb(248, 249, 252);
             dataGridView1.RowHeadersDefaultCellStyle.ForeColor = System.Drawing.Color.FromArgb(100, 110, 120);
             dataGridView1.CellBorderStyle = System.Windows.Forms.DataGridViewCellBorderStyle.SingleHorizontal;
+
+            // splitContainerAzure
+            splitContainerAzure.Dock = System.Windows.Forms.DockStyle.Fill;
+            splitContainerAzure.Name = "splitContainerAzure";
+            splitContainerAzure.Orientation = System.Windows.Forms.Orientation.Vertical;
+            splitContainerAzure.Panel2.Controls.Add(dataGridView1);
 
             // lblFilePath
             lblFilePath = new System.Windows.Forms.Label();
@@ -308,7 +302,7 @@ namespace ParquetExplorer
             Text = "Parquet Explorer";
             Font = new System.Drawing.Font("Segoe UI", 9f);
             BackColor = System.Drawing.Color.FromArgb(248, 249, 252);
-            Controls.Add(dataGridView1);
+            Controls.Add(splitContainerAzure);
             Controls.Add(pnlBottom);
             Controls.Add(lblFilePath);
             Controls.Add(toolStrip1);
@@ -320,6 +314,8 @@ namespace ParquetExplorer
             toolStrip1.ResumeLayout(false);
             toolStrip1.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
+            splitContainerAzure.Panel2.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)splitContainerAzure).EndInit();
             pnlBottom.ResumeLayout(false);
             pnlBottom.PerformLayout();
             statusStrip1.ResumeLayout(false);
@@ -332,14 +328,12 @@ namespace ParquetExplorer
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem = null!;
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem = null!;
         private System.Windows.Forms.ToolStripMenuItem openAzureToolStripMenuItem = null!;
-        private System.Windows.Forms.ToolStripMenuItem openAzureSignInToolStripMenuItem = null!;
         private System.Windows.Forms.ToolStripMenuItem compareToolStripMenuItem = null!;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1 = null!;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem = null!;
         private System.Windows.Forms.ToolStrip toolStrip1 = null!;
         private System.Windows.Forms.ToolStripButton btnOpen = null!;
         private System.Windows.Forms.ToolStripButton btnOpenAzure = null!;
-        private System.Windows.Forms.ToolStripButton btnOpenAzureSignIn = null!;
         private System.Windows.Forms.ToolStripButton btnCompare = null!;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2 = null!;
         private System.Windows.Forms.ToolStripLabel lblFilterLabel = null!;
@@ -349,6 +343,7 @@ namespace ParquetExplorer
         private System.Windows.Forms.ToolStripButton btnApplyFilter = null!;
         private System.Windows.Forms.ToolStripButton btnShowEmptyColumns = null!;
         private System.Windows.Forms.DataGridView dataGridView1 = null!;
+        private System.Windows.Forms.SplitContainer splitContainerAzure = null!;
         private System.Windows.Forms.Panel pnlBottom = null!;
         private System.Windows.Forms.Button btnPrev = null!;
         private System.Windows.Forms.Button btnNext = null!;

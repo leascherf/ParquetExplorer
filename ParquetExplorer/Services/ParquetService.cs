@@ -17,7 +17,7 @@ namespace ParquetExplorer.Services
             var table = new DataTable();
 
             using var fileStream = File.OpenRead(filePath);
-            using var reader = await ParquetReader.CreateAsync(fileStream);
+            using var reader = await ParquetReader.CreateAsync(fileStream).ConfigureAwait(false);
             var schema = reader.Schema;
             var dataFields = schema.DataFields;
 
@@ -49,7 +49,7 @@ namespace ParquetExplorer.Services
                 {
                     try
                     {
-                        var dc = await rowGroupReader.ReadColumnAsync(dataFields[ci]);
+                        var dc = await rowGroupReader.ReadColumnAsync(dataFields[ci]).ConfigureAwait(false);
                         columnData[ci] = (dataFields[ci], (Array)dc.Data);
                     }
                     catch

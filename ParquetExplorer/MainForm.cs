@@ -12,16 +12,50 @@ namespace ParquetExplorer
         private readonly ICompareService _compareService;
         private readonly IAzureBlobService _azureBlobService;
         private readonly IAzureAccountService _azureAccountService;
+        private readonly IAzureSessionManager _sessionManager;
 
-        public MainForm(IExplorerService explorer, IParquetService parquetService, ICompareService compareService, IAzureBlobService azureBlobService, IAzureAccountService azureAccountService)
+        // The Azure Explorer panel is constructed with DI dependencies and added
+        // programmatically after InitializeComponent so the designer stays clean.
+        private readonly AzureExplorerPanel _azurePanel;
+
+        public MainForm(IExplorerService explorer, IParquetService parquetService, ICompareService compareService, IAzureBlobService azureBlobService, IAzureAccountService azureAccountService, IAzureSessionManager sessionManager)
         {
             _explorer = explorer;
             _parquetService = parquetService;
             _compareService = compareService;
             _azureBlobService = azureBlobService;
             _azureAccountService = azureAccountService;
+            _sessionManager = sessionManager;
             InitializeComponent();
             EnableDoubleBuffer(dataGridView1);
+
+            // Build the Azure Explorer panel and embed it into the SplitContainer.
+            _azurePanel = new AzureExplorerPanel(azureAccountService, azureBlobService, sessionManager);
+            _azurePanel.Dock = DockStyle.Fill;
+            _azurePanel.BlobOpenRequested += AzurePanel_BlobOpenRequested;
+            _azurePanel.CloseRequested += AzurePanel_CloseRequested;
+            splitContainerAzure.Panel1.Controls.Add(_azurePanel);
+
+            // Start with the Azure panel collapsed; it expands on demand.
+            splitContainerAzure.Panel1Collapsed = true;
+
+            // SplitterWidth, Panel1MinSize, Panel2MinSize and SplitterDistance must be set
+            // after the form has its actual width; setting them inside BeginInit/EndInit
+            // causes an InvalidOperationException because the control's default width (150)
+            // is smaller than Panel1MinSize + Panel2MinSize + SplitterWidth.
+            Load += (_, _) =>
+            {
+                splitContainerAzure.SplitterWidth = 4;
+                splitContainerAzure.Panel1MinSize = 220;
+                splitContainerAzure.Panel2MinSize = 300;
+
+                int desired = 280;
+                int max = splitContainerAzure.Width
+                          - splitContainerAzure.Panel2MinSize
+                          - splitContainerAzure.SplitterWidth;
+                if (desired >= splitContainerAzure.Panel1MinSize && desired <= max)
+                    splitContainerAzure.SplitterDistance = desired;
+            };
         }
 
         private static void EnableDoubleBuffer(DataGridView dgv)
@@ -79,42 +113,40 @@ namespace ParquetExplorer
             }
         }
 
-        private async void openAzureToolStripMenuItem_Click(object sender, EventArgs e)
+        private void openAzureToolStripMenuItem_Click(object sender, EventArgs e) =>
+            ToggleAzurePanel();
+
+        private void btnOpenAzure_Click(object sender, EventArgs e) =>
+            ToggleAzurePanel();
+
+        /// <summary>
+        /// Shows or hides the Azure Explorer panel.  Clicking the toolbar button or
+        /// the menu item acts as a toggle.
+        /// </summary>
+        private void ToggleAzurePanel()
         {
-            await OpenFromAzureAsync();
+            splitContainerAzure.Panel1Collapsed = !splitContainerAzure.Panel1Collapsed;
+            btnOpenAzure.ToolTipText = splitContainerAzure.Panel1Collapsed
+                ? "Open Azure Explorer panel (Ctrl+Shift+O)"
+                : "Hide Azure Explorer panel (Ctrl+Shift+O)";
         }
 
-        private async void btnOpenAzure_Click(object sender, EventArgs e)
+        // ── Azure panel event handlers ─────────────────────────────────────
+
+        /// <summary>
+        /// Called when the user selects a blob in the Azure Explorer panel and clicks
+        /// "Open Blob".  Downloads the blob (already done by the panel), loads it into
+        /// the grid, and cleans up the temp file.
+        /// </summary>
+        private async void AzurePanel_BlobOpenRequested(object? sender, BlobSelectedEventArgs e)
         {
-            await OpenFromAzureAsync();
-        }
-
-        private async void openAzureSignInToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            await OpenFromAzureSignInAsync();
-        }
-
-        private async void btnOpenAzureSignIn_Click(object sender, EventArgs e)
-        {
-            await OpenFromAzureSignInAsync();
-        }
-
-        private async Task OpenFromAzureAsync()
-        {
-            using var dlg = new AzureBlobBrowseForm(_azureBlobService);
-            if (dlg.ShowDialog(this) != DialogResult.OK) return;
-
-            string? tempFile = dlg.SelectedTempFilePath;
-            string? displayName = dlg.SelectedBlobDisplayName;
-            if (tempFile == null) return;
-
             toolStripStatusLabel1.Text = "Loading...";
             try
             {
-                await _explorer.LoadFileAsync(tempFile);
+                await _explorer.LoadFileAsync(e.TempFilePath);
 
-                var fileInfo = new System.IO.FileInfo(tempFile);
-                lblFilePath.Text = $"☁  {displayName}";
+                var fileInfo = new System.IO.FileInfo(e.TempFilePath);
+                lblFilePath.Text = $"☁  {e.DisplayName}";
                 lblFilePath.ForeColor = System.Drawing.Color.FromArgb(40, 56, 72);
                 lblFilePath.Font = new System.Drawing.Font("Segoe UI", 9f);
 
@@ -136,52 +168,16 @@ namespace ParquetExplorer
             }
             finally
             {
-                // Clean up the temporary file after loading
-                try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); }
+                try { if (System.IO.File.Exists(e.TempFilePath)) System.IO.File.Delete(e.TempFilePath); }
                 catch { /* best effort */ }
             }
         }
 
-        private async Task OpenFromAzureSignInAsync()
+        /// <summary>Collapses the Azure Explorer panel when the user clicks its ✕ button.</summary>
+        private void AzurePanel_CloseRequested(object? sender, EventArgs e)
         {
-            using var dlg = new AzureSignInBrowseForm(_azureAccountService, _azureBlobService);
-            if (dlg.ShowDialog(this) != DialogResult.OK) return;
-
-            string? tempFile = dlg.SelectedTempFilePath;
-            string? displayName = dlg.SelectedBlobDisplayName;
-            if (tempFile == null) return;
-
-            toolStripStatusLabel1.Text = "Loading...";
-            try
-            {
-                await _explorer.LoadFileAsync(tempFile);
-
-                var fileInfo = new System.IO.FileInfo(tempFile);
-                lblFilePath.Text = $"☁  {displayName}";
-                lblFilePath.ForeColor = System.Drawing.Color.FromArgb(40, 56, 72);
-                lblFilePath.Font = new System.Drawing.Font("Segoe UI", 9f);
-
-                cmbFilterColumn.Items.Clear();
-                cmbFilterColumn.Items.Add("(All Columns)");
-                foreach (var col in _explorer.ColumnNames)
-                    cmbFilterColumn.Items.Add(col);
-                cmbFilterColumn.SelectedIndex = 0;
-
-                txtFilter.Text = string.Empty;
-                RefreshGrid();
-                toolStripStatusLabel1.Text = $"✓  Loaded {_explorer.TotalRowCount:N0} rows  |  {_explorer.ColumnNames.Count} columns  |  {fileInfo.Length / 1024.0 / 1024.0:F2} MB";
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error loading blob:\n{ex.Message}", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-                toolStripStatusLabel1.Text = "⚠  Error loading blob";
-            }
-            finally
-            {
-                try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); }
-                catch { /* best effort */ }
-            }
+            splitContainerAzure.Panel1Collapsed = true;
+            btnOpenAzure.ToolTipText = "Open Azure Explorer panel (Ctrl+Shift+O)";
         }
 
         private void btnApplyFilter_Click(object sender, EventArgs e)
@@ -303,7 +299,7 @@ namespace ParquetExplorer
 
         private void OpenCompareForm()
         {
-            var form = new CompareForm(_parquetService, _compareService);
+            var form = new CompareForm(_parquetService, _compareService, _azureAccountService, _azureBlobService, _sessionManager);
             form.Show(this);
         }
 

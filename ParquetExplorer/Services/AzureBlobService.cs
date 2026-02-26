@@ -1,4 +1,3 @@
-using Azure.Core;
 using Azure.Storage.Blobs;
 using Azure.Storage.Blobs.Models;
 using ParquetExplorer.Services.Interfaces;
@@ -10,13 +9,20 @@ namespace ParquetExplorer.Services
     /// </summary>
     public class AzureBlobService : IAzureBlobService
     {
+        private readonly IAzureClientFactory _clientFactory;
+
+        public AzureBlobService(IAzureClientFactory clientFactory)
+        {
+            _clientFactory = clientFactory;
+        }
+
         // ── Connection-string overloads ──────────────────────────────────────
 
         public async Task<IReadOnlyList<string>> ListContainersAsync(string connectionString)
         {
             var client = new BlobServiceClient(connectionString);
             var containers = new List<string>();
-            await foreach (var container in client.GetBlobContainersAsync())
+            await foreach (var container in client.GetBlobContainersAsync().ConfigureAwait(false))
                 containers.Add(container.Name);
             return containers;
         }
@@ -25,7 +31,7 @@ namespace ParquetExplorer.Services
         {
             var containerClient = new BlobContainerClient(connectionString, containerName);
             var blobs = new List<string>();
-            await foreach (var blob in containerClient.GetBlobsAsync(prefix: prefix))
+            await foreach (var blob in containerClient.GetBlobsAsync(prefix: prefix).ConfigureAwait(false))
                 blobs.Add(blob.Name);
             return blobs;
         }
@@ -38,41 +44,44 @@ namespace ParquetExplorer.Services
             string extension = Path.GetExtension(blobName);
             string tempFile = Path.Combine(Path.GetTempPath(), $"parquetexplorer_{Guid.NewGuid()}{extension}");
 
-            await blobClient.DownloadToAsync(tempFile);
+            await blobClient.DownloadToAsync(tempFile).ConfigureAwait(false);
             return tempFile;
         }
 
-        // ── Credential-based overloads (Azure AD sign-in) ───────────────────
+        // ── Azure AD (factory-credential) overloads ──────────────────────────
+        // The BlobServiceClient is created via IAzureClientFactory, which holds the
+        // same TokenCredential as the ArmClient used for account discovery.  This
+        // ensures MSAL's token cache is shared and no second browser prompt is needed.
 
-        public async Task<IReadOnlyList<string>> ListContainersAsync(Uri serviceUri, TokenCredential credential)
+        public async Task<IReadOnlyList<string>> ListContainersAsync(Uri serviceUri)
         {
-            var client = new BlobServiceClient(serviceUri, credential);
+            var client = _clientFactory.CreateBlobServiceClient(serviceUri);
             var containers = new List<string>();
-            await foreach (var container in client.GetBlobContainersAsync())
+            await foreach (var container in client.GetBlobContainersAsync().ConfigureAwait(false))
                 containers.Add(container.Name);
             return containers;
         }
 
-        public async Task<IReadOnlyList<string>> ListBlobsAsync(Uri serviceUri, TokenCredential credential, string containerName, string? prefix = null)
+        public async Task<IReadOnlyList<string>> ListBlobsAsync(Uri serviceUri, string containerName, string? prefix = null)
         {
-            var serviceClient = new BlobServiceClient(serviceUri, credential);
+            var serviceClient = _clientFactory.CreateBlobServiceClient(serviceUri);
             var containerClient = serviceClient.GetBlobContainerClient(containerName);
             var blobs = new List<string>();
-            await foreach (var blob in containerClient.GetBlobsAsync(prefix: prefix))
+            await foreach (var blob in containerClient.GetBlobsAsync(prefix: prefix).ConfigureAwait(false))
                 blobs.Add(blob.Name);
             return blobs;
         }
 
-        public async Task<string> DownloadBlobToTempFileAsync(Uri serviceUri, TokenCredential credential, string containerName, string blobName)
+        public async Task<string> DownloadBlobToTempFileAsync(Uri serviceUri, string containerName, string blobName)
         {
-            var serviceClient = new BlobServiceClient(serviceUri, credential);
+            var serviceClient = _clientFactory.CreateBlobServiceClient(serviceUri);
             var containerClient = serviceClient.GetBlobContainerClient(containerName);
             var blobClient = containerClient.GetBlobClient(blobName);
 
             string extension = Path.GetExtension(blobName);
             string tempFile = Path.Combine(Path.GetTempPath(), $"parquetexplorer_{Guid.NewGuid()}{extension}");
 
-            await blobClient.DownloadToAsync(tempFile);
+            await blobClient.DownloadToAsync(tempFile).ConfigureAwait(false);
             return tempFile;
         }
     }

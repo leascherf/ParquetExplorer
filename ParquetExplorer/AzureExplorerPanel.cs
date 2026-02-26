@@ -4,22 +4,36 @@ using ParquetExplorer.Services.Interfaces;
 namespace ParquetExplorer
 {
     /// <summary>
-    /// Dialog that signs the user in with their Azure account,
-    /// lists all accessible storage accounts, containers, and blobs,
-    /// and lets them pick a blob to open.
+    /// Event data for <see cref="AzureExplorerPanel.BlobOpenRequested"/>.
+    /// </summary>
+    public class BlobSelectedEventArgs : EventArgs
+    {
+        /// <summary>Local temp-file path of the downloaded blob.</summary>
+        public string TempFilePath { get; }
+        /// <summary>Display name shown in the main form title (e.g. "account/container/blob").</summary>
+        public string DisplayName { get; }
+
+        public BlobSelectedEventArgs(string tempFilePath, string displayName)
+        {
+            TempFilePath = tempFilePath;
+            DisplayName = displayName;
+        }
+    }
+
+    /// <summary>
+    /// Collapsible left-panel UserControl that lets the user sign in with their Azure
+    /// account, browse Storage Accounts → Containers → Blobs, and open a blob.
     /// <para>
     /// Authentication state is owned by the <see cref="IAzureClientFactory"/> singleton
-    /// (injected via <see cref="IAzureAccountService"/>), so closing this dialog does
-    /// not dispose of the global session.  On reopening, the dialog detects the existing
-    /// session and skips the sign-in step automatically.
+    /// so closing/hiding this panel never disposes the global session.
     /// </para>
     /// <para>
-    /// Data is lazily loaded from <see cref="IAzureSessionManager"/> on first access
-    /// and written back after every successful API call. Use the Refresh button to
-    /// force a fresh API call at the appropriate cache level.
+    /// Data is lazily loaded from <see cref="IAzureSessionManager"/> and written back
+    /// after every successful API call.  Use the Refresh button to force a fresh fetch
+    /// at the relevant cache level.
     /// </para>
     /// </summary>
-    public partial class AzureSignInBrowseForm : Form
+    public partial class AzureExplorerPanel : UserControl
     {
         private readonly IAzureAccountService _azureAccountService;
         private readonly IAzureBlobService _azureBlobService;
@@ -27,26 +41,15 @@ namespace ParquetExplorer
 
         private IReadOnlyList<StorageAccountInfo> _storageAccounts = Array.Empty<StorageAccountInfo>();
 
-        /// <summary>Local temp-file path of the downloaded blob (null if cancelled).</summary>
-        public string? SelectedTempFilePath { get; private set; }
+        /// <summary>Raised when the user selects a blob and clicks "Open Blob".</summary>
+        public event EventHandler<BlobSelectedEventArgs>? BlobOpenRequested;
 
-        /// <summary>Display name shown in the main form title bar (e.g. "account/container/blob").</summary>
-        public string? SelectedBlobDisplayName { get; private set; }
+        /// <summary>Raised when the user clicks the ✕ close button in the panel header.</summary>
+        public event EventHandler? CloseRequested;
 
-        /// <summary>
-        /// When set before <see cref="Form.ShowDialog()"/>, the dialog will pre-select the
-        /// storage account whose <see cref="StorageAccountInfo.Name"/> matches this value.
-        /// </summary>
-        public string? InitialAccountName { get; set; }
-
-        /// <summary>
-        /// When set before <see cref="Form.ShowDialog()"/>, the dialog will pre-select this
-        /// container after the account list is loaded (only effective when
-        /// <see cref="InitialAccountName"/> is also set and a matching account is found).
-        /// </summary>
-        public string? InitialContainer { get; set; }
-
-        public AzureSignInBrowseForm(IAzureAccountService azureAccountService, IAzureBlobService azureBlobService,
+        public AzureExplorerPanel(
+            IAzureAccountService azureAccountService,
+            IAzureBlobService azureBlobService,
             IAzureSessionManager sessionManager)
         {
             _azureAccountService = azureAccountService;
@@ -66,10 +69,11 @@ namespace ParquetExplorer
             }
         }
 
+        // ── Button handlers ────────────────────────────────────────────────
+
         private async void btnSignIn_Click(object sender, EventArgs e)
         {
             SetBusy(true, "Signing in — a browser window will open...");
-
             try
             {
                 await _azureAccountService.SignInAsync();
@@ -84,45 +88,41 @@ namespace ParquetExplorer
             }
 
             btnSignIn.Text = "🔄 Sign in again";
-            // A new sign-in means the account list may have changed — drop cached data.
             _sessionManager.Refresh(CacheLevel.Accounts);
             await LoadStorageAccountsAsync();
         }
 
-        /// <summary>
-        /// Refreshes the cache at the most specific level implied by the current selection,
-        /// then reloads the affected list.
-        /// </summary>
         private async void btnRefresh_Click(object sender, EventArgs e)
         {
             if (lstAccounts.SelectedItem is StorageAccountInfo account)
             {
                 if (lstContainers.SelectedItem is string container)
                 {
-                    // Refresh blobs for the selected container.
                     _sessionManager.Refresh(CacheLevel.Blobs, account.BlobEndpoint, container);
                     await LoadBlobsAsync(account, container);
                 }
                 else
                 {
-                    // Refresh containers for the selected account.
                     _sessionManager.Refresh(CacheLevel.Containers, account.BlobEndpoint);
                     await LoadContainersAsync(account);
                 }
             }
             else
             {
-                // No account selected — refresh the full account list.
                 _sessionManager.Refresh(CacheLevel.Accounts);
                 await LoadStorageAccountsAsync();
             }
         }
 
+        private void btnClosePanel_Click(object sender, EventArgs e) =>
+            CloseRequested?.Invoke(this, EventArgs.Empty);
+
+        // ── Data loading ───────────────────────────────────────────────────
+
         private async Task LoadStorageAccountsAsync()
         {
             if (!_azureAccountService.IsSignedIn) return;
 
-            // Clear all lists at the start, regardless of whether data comes from cache.
             lstAccounts.Items.Clear();
             lstContainers.Items.Clear();
             lstBlobs.Items.Clear();
@@ -134,11 +134,9 @@ namespace ParquetExplorer
             if (cached != null)
             {
                 _storageAccounts = cached;
-                foreach (var account in _storageAccounts)
-                    lstAccounts.Items.Add(account);
-                lblSignInStatus.Text = $"Signed in — {_storageAccounts.Count} storage account(s) found. (cached)";
+                foreach (var a in _storageAccounts) lstAccounts.Items.Add(a);
+                lblSignInStatus.Text = $"Signed in — {_storageAccounts.Count} account(s). (cached)";
                 lblStatus.Text = string.Empty;
-                TryPreSelectAccount();
                 return;
             }
 
@@ -148,16 +146,11 @@ namespace ParquetExplorer
             {
                 _storageAccounts = await _azureAccountService.ListStorageAccountsAsync();
                 _sessionManager.CacheAccounts(_storageAccounts);
-
-                foreach (var account in _storageAccounts)
-                    lstAccounts.Items.Add(account);
-
+                foreach (var a in _storageAccounts) lstAccounts.Items.Add(a);
                 lblSignInStatus.Text = _storageAccounts.Count > 0
-                    ? $"Signed in — {_storageAccounts.Count} storage account(s) found."
+                    ? $"Signed in — {_storageAccounts.Count} account(s) found."
                     : "Signed in — no storage accounts found.";
-
                 lblStatus.Text = string.Empty;
-                TryPreSelectAccount();
             }
             catch (Exception ex)
             {
@@ -165,17 +158,13 @@ namespace ParquetExplorer
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 lblSignInStatus.Text = "Failed to discover accounts.";
             }
-            finally
-            {
-                SetBusy(false, "");
-            }
+            finally { SetBusy(false, ""); }
         }
 
         private async void lstAccounts_SelectedIndexChanged(object sender, EventArgs e)
         {
             if (lstAccounts.SelectedItem is not StorageAccountInfo account
                 || !_azureAccountService.IsSignedIn) return;
-
             await LoadContainersAsync(account);
         }
 
@@ -183,7 +172,6 @@ namespace ParquetExplorer
         {
             if (!_azureAccountService.IsSignedIn) return;
 
-            // Clear lists at the start, regardless of cache hit/miss.
             lstContainers.Items.Clear();
             lstBlobs.Items.Clear();
             btnOpen.Enabled = false;
@@ -192,10 +180,8 @@ namespace ParquetExplorer
             var cached = _sessionManager.GetCachedContainers(account.BlobEndpoint);
             if (cached != null)
             {
-                foreach (var c in cached)
-                    lstContainers.Items.Add(c);
-                lblStatus.Text = $"{lstContainers.Items.Count} container(s) in '{account.Name}'. (cached)";
-                TryPreSelectContainer();
+                foreach (var c in cached) lstContainers.Items.Add(c);
+                lblStatus.Text = $"{lstContainers.Items.Count} container(s). (cached)";
                 return;
             }
 
@@ -205,12 +191,8 @@ namespace ParquetExplorer
             {
                 var containers = await _azureBlobService.ListContainersAsync(account.BlobEndpoint);
                 _sessionManager.CacheContainers(account.BlobEndpoint, containers);
-
-                foreach (var c in containers)
-                    lstContainers.Items.Add(c);
-
+                foreach (var c in containers) lstContainers.Items.Add(c);
                 lblStatus.Text = $"{lstContainers.Items.Count} container(s) in '{account.Name}'.";
-                TryPreSelectContainer();
             }
             catch (Exception ex)
             {
@@ -218,10 +200,7 @@ namespace ParquetExplorer
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 lblStatus.Text = "Failed to list containers.";
             }
-            finally
-            {
-                SetBusy(false, "");
-            }
+            finally { SetBusy(false, ""); }
         }
 
         private async void lstContainers_SelectedIndexChanged(object sender, EventArgs e)
@@ -229,7 +208,6 @@ namespace ParquetExplorer
             if (lstAccounts.SelectedItem is not StorageAccountInfo account
                 || lstContainers.SelectedItem is not string container
                 || !_azureAccountService.IsSignedIn) return;
-
             await LoadBlobsAsync(account, container);
         }
 
@@ -237,7 +215,6 @@ namespace ParquetExplorer
         {
             if (!_azureAccountService.IsSignedIn) return;
 
-            // Clear the blob list at the start, regardless of cache hit/miss.
             lstBlobs.Items.Clear();
             btnOpen.Enabled = false;
 
@@ -245,9 +222,8 @@ namespace ParquetExplorer
             var cached = _sessionManager.GetCachedBlobs(account.BlobEndpoint, container);
             if (cached != null)
             {
-                foreach (var b in cached)
-                    lstBlobs.Items.Add(b);
-                lblStatus.Text = $"{lstBlobs.Items.Count} blob(s) in '{container}'. (cached)";
+                foreach (var b in cached) lstBlobs.Items.Add(b);
+                lblStatus.Text = $"{lstBlobs.Items.Count} blob(s). (cached)";
                 return;
             }
 
@@ -257,10 +233,7 @@ namespace ParquetExplorer
             {
                 var blobs = await _azureBlobService.ListBlobsAsync(account.BlobEndpoint, container);
                 _sessionManager.CacheBlobs(account.BlobEndpoint, container, blobs);
-
-                foreach (var b in blobs)
-                    lstBlobs.Items.Add(b);
-
+                foreach (var b in blobs) lstBlobs.Items.Add(b);
                 lblStatus.Text = $"{lstBlobs.Items.Count} blob(s) in '{container}'.";
             }
             catch (Exception ex)
@@ -269,16 +242,11 @@ namespace ParquetExplorer
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 lblStatus.Text = "Failed to list blobs.";
             }
-            finally
-            {
-                SetBusy(false, "");
-            }
+            finally { SetBusy(false, ""); }
         }
 
-        private void lstBlobs_SelectedIndexChanged(object sender, EventArgs e)
-        {
+        private void lstBlobs_SelectedIndexChanged(object sender, EventArgs e) =>
             btnOpen.Enabled = lstBlobs.SelectedItem != null;
-        }
 
         private async void btnOpen_Click(object sender, EventArgs e)
         {
@@ -290,11 +258,10 @@ namespace ParquetExplorer
             SetBusy(true, $"Downloading '{blobName}'...");
             try
             {
-                SelectedTempFilePath = await _azureBlobService.DownloadBlobToTempFileAsync(
+                var tempFile = await _azureBlobService.DownloadBlobToTempFileAsync(
                     account.BlobEndpoint, container, blobName);
-                SelectedBlobDisplayName = $"{account.Name}/{container}/{blobName}";
-                DialogResult = DialogResult.OK;
-                Close();
+                BlobOpenRequested?.Invoke(this,
+                    new BlobSelectedEventArgs(tempFile, $"{account.Name}/{container}/{blobName}"));
             }
             catch (Exception ex)
             {
@@ -302,17 +269,10 @@ namespace ParquetExplorer
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 lblStatus.Text = "Download failed.";
             }
-            finally
-            {
-                SetBusy(false, "");
-            }
+            finally { SetBusy(false, ""); }
         }
 
-        private void btnCancel_Click(object sender, EventArgs e)
-        {
-            DialogResult = DialogResult.Cancel;
-            Close();
-        }
+        // ── Helpers ────────────────────────────────────────────────────────
 
         private void SetBusy(bool busy, string message)
         {
@@ -321,35 +281,10 @@ namespace ParquetExplorer
             lstAccounts.Enabled = !busy;
             lstContainers.Enabled = !busy;
             lstBlobs.Enabled = !busy;
+            btnOpen.Enabled = !busy && lstBlobs.SelectedItem != null;
             Cursor = busy ? Cursors.WaitCursor : Cursors.Default;
             if (!string.IsNullOrEmpty(message))
                 lblStatus.Text = message;
-        }
-
-        private void TryPreSelectAccount()
-        {
-            if (InitialAccountName == null) return;
-            for (int i = 0; i < lstAccounts.Items.Count; i++)
-            {
-                if (lstAccounts.Items[i] is StorageAccountInfo a && a.Name == InitialAccountName)
-                {
-                    lstAccounts.SelectedIndex = i;
-                    break;
-                }
-            }
-        }
-
-        private void TryPreSelectContainer()
-        {
-            if (InitialContainer == null) return;
-            for (int i = 0; i < lstContainers.Items.Count; i++)
-            {
-                if (lstContainers.Items[i]?.ToString() == InitialContainer)
-                {
-                    lstContainers.SelectedIndex = i;
-                    break;
-                }
-            }
         }
     }
 }

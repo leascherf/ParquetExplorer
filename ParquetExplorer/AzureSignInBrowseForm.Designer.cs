@@ -15,6 +15,7 @@ namespace ParquetExplorer
         {
             pnlTop = new System.Windows.Forms.Panel();
             btnSignIn = new System.Windows.Forms.Button();
+            btnRefresh = new System.Windows.Forms.Button();
             lblSignInStatus = new System.Windows.Forms.Label();
 
             pnlLists = new System.Windows.Forms.Panel();
@@ -47,9 +48,20 @@ namespace ParquetExplorer
             btnSignIn.Click += btnSignIn_Click;
             pnlTop.Controls.Add(btnSignIn);
 
+            // btnRefresh
+            btnRefresh.Location = new System.Drawing.Point(180, 11);
+            btnRefresh.Size = new System.Drawing.Size(100, 28);
+            btnRefresh.Text = "🔄 Refresh";
+            btnRefresh.Font = new System.Drawing.Font("Segoe UI", 9f);
+            btnRefresh.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
+            btnRefresh.BackColor = System.Drawing.Color.FromArgb(240, 244, 251);
+            btnRefresh.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(190, 200, 215);
+            btnRefresh.Click += btnRefresh_Click;
+            pnlTop.Controls.Add(btnRefresh);
+
             // lblSignInStatus
             lblSignInStatus.AutoSize = false;
-            lblSignInStatus.Location = new System.Drawing.Point(182, 14);
+            lblSignInStatus.Location = new System.Drawing.Point(290, 14);
             lblSignInStatus.Size = new System.Drawing.Size(560, 20);
             lblSignInStatus.Font = new System.Drawing.Font("Segoe UI", 9f, System.Drawing.FontStyle.Italic);
             lblSignInStatus.ForeColor = System.Drawing.Color.FromArgb(80, 100, 130);
@@ -174,6 +186,7 @@ namespace ParquetExplorer
 
         private System.Windows.Forms.Panel pnlTop = null!;
         private System.Windows.Forms.Button btnSignIn = null!;
+        private System.Windows.Forms.Button btnRefresh = null!;
         private System.Windows.Forms.Label lblSignInStatus = null!;
         private System.Windows.Forms.Panel pnlLists = null!;
         private System.Windows.Forms.Label lblAccountsLabel = null!;
