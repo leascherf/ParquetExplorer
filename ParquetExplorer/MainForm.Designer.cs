@@ -17,6 +17,7 @@ namespace ParquetExplorer
             fileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             openToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             openAzureToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            openAzureSignInToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             compareToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
             exitToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -24,6 +25,7 @@ namespace ParquetExplorer
             toolStrip1 = new System.Windows.Forms.ToolStrip();
             btnOpen = new System.Windows.Forms.ToolStripButton();
             btnOpenAzure = new System.Windows.Forms.ToolStripButton();
+            btnOpenAzureSignIn = new System.Windows.Forms.ToolStripButton();
             btnCompare = new System.Windows.Forms.ToolStripButton();
             toolStripSeparator2 = new System.Windows.Forms.ToolStripSeparator();
             lblFilterLabel = new System.Windows.Forms.ToolStripLabel();
@@ -65,7 +67,7 @@ namespace ParquetExplorer
             // fileToolStripMenuItem
             fileToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[]
             {
-                openToolStripMenuItem, openAzureToolStripMenuItem, compareToolStripMenuItem, toolStripSeparator1, exitToolStripMenuItem
+                openToolStripMenuItem, openAzureToolStripMenuItem, openAzureSignInToolStripMenuItem, compareToolStripMenuItem, toolStripSeparator1, exitToolStripMenuItem
             });
             fileToolStripMenuItem.Name = "fileToolStripMenuItem";
             fileToolStripMenuItem.Text = "&File";
@@ -83,6 +85,11 @@ namespace ParquetExplorer
             openAzureToolStripMenuItem.Text = "Open from &Azure Blob Storage...";
             openAzureToolStripMenuItem.Click += openAzureToolStripMenuItem_Click;
 
+            // openAzureSignInToolStripMenuItem
+            openAzureSignInToolStripMenuItem.Name = "openAzureSignInToolStripMenuItem";
+            openAzureSignInToolStripMenuItem.Text = "Open from Azure (Sign &In)...";
+            openAzureSignInToolStripMenuItem.Click += openAzureSignInToolStripMenuItem_Click;
+
             // compareToolStripMenuItem
             compareToolStripMenuItem.Name = "compareToolStripMenuItem";
             compareToolStripMenuItem.Text = "&Compare Files...";
@@ -99,7 +106,7 @@ namespace ParquetExplorer
             // toolStrip1
             toolStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[]
             {
-                btnOpen, btnOpenAzure, btnCompare, toolStripSeparator2,
+                btnOpen, btnOpenAzure, btnOpenAzureSignIn, btnCompare, toolStripSeparator2,
                 lblFilterLabel, txtFilter, lblColumnLabel, cmbFilterColumn, btnApplyFilter, btnShowEmptyColumns
             });
             toolStrip1.Location = new System.Drawing.Point(0, 24);
@@ -126,6 +133,14 @@ namespace ParquetExplorer
             btnOpenAzure.ToolTipText = "Open Parquet from Azure Blob Storage (Ctrl+Shift+O)";
             btnOpenAzure.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             btnOpenAzure.Click += btnOpenAzure_Click;
+
+            // btnOpenAzureSignIn
+            btnOpenAzureSignIn.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
+            btnOpenAzureSignIn.Name = "btnOpenAzureSignIn";
+            btnOpenAzureSignIn.Text = "🔑 Azure Sign In";
+            btnOpenAzureSignIn.ToolTipText = "Open Parquet from Azure (sign in with your account)";
+            btnOpenAzureSignIn.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
+            btnOpenAzureSignIn.Click += btnOpenAzureSignIn_Click;
 
             // btnCompare
             btnCompare.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
@@ -317,12 +332,14 @@ namespace ParquetExplorer
         private System.Windows.Forms.ToolStripMenuItem fileToolStripMenuItem = null!;
         private System.Windows.Forms.ToolStripMenuItem openToolStripMenuItem = null!;
         private System.Windows.Forms.ToolStripMenuItem openAzureToolStripMenuItem = null!;
+        private System.Windows.Forms.ToolStripMenuItem openAzureSignInToolStripMenuItem = null!;
         private System.Windows.Forms.ToolStripMenuItem compareToolStripMenuItem = null!;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1 = null!;
         private System.Windows.Forms.ToolStripMenuItem exitToolStripMenuItem = null!;
         private System.Windows.Forms.ToolStrip toolStrip1 = null!;
         private System.Windows.Forms.ToolStripButton btnOpen = null!;
         private System.Windows.Forms.ToolStripButton btnOpenAzure = null!;
+        private System.Windows.Forms.ToolStripButton btnOpenAzureSignIn = null!;
         private System.Windows.Forms.ToolStripButton btnCompare = null!;
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator2 = null!;
         private System.Windows.Forms.ToolStripLabel lblFilterLabel = null!;
