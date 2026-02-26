@@ -8,6 +8,8 @@ namespace ParquetExplorer
     /// Dialog that signs the user in with their Azure account,
     /// lists all accessible storage accounts, containers, and blobs,
     /// and lets them pick a blob to open.
+    /// When a <paramref name="existingCredential"/> is supplied the sign-in step is
+    /// skipped and the storage accounts are loaded automatically on startup.
     /// </summary>
     public partial class AzureSignInBrowseForm : Form
     {
@@ -23,29 +25,71 @@ namespace ParquetExplorer
         /// <summary>Display name shown in the main form title bar (e.g. "account/container/blob").</summary>
         public string? SelectedBlobDisplayName { get; private set; }
 
-        public AzureSignInBrowseForm(IAzureAccountService azureAccountService, IAzureBlobService azureBlobService)
+        /// <summary>
+        /// Creates a new dialog. Pass an <paramref name="existingCredential"/> to bypass the
+        /// interactive sign-in step when the user has already authenticated in this session.
+        /// </summary>
+        public AzureSignInBrowseForm(IAzureAccountService azureAccountService, IAzureBlobService azureBlobService,
+            TokenCredential? existingCredential = null)
         {
             _azureAccountService = azureAccountService;
             _azureBlobService = azureBlobService;
+            _credential = existingCredential;
             InitializeComponent();
+        }
+
+        protected override async void OnLoad(EventArgs e)
+        {
+            base.OnLoad(e);
+            if (_credential != null)
+            {
+                btnSignIn.Text = "🔄 Sign in again";
+                lblSignInStatus.Text = "Already signed in — loading storage accounts...";
+                await LoadStorageAccountsAsync();
+            }
         }
 
         private async void btnSignIn_Click(object sender, EventArgs e)
         {
             SetBusy(true, "Signing in — a browser window will open...");
+
+            TokenCredential? newCredential;
+            try
+            {
+                newCredential = await _azureAccountService.SignInAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Sign-in failed:\n{ex.Message}", "Sign-In Error",
+                    MessageBoxButtons.OK, MessageBoxIcon.Error);
+                lblSignInStatus.Text = "Sign-in failed.";
+                SetBusy(false, "");
+                return;
+            }
+
+            // Only replace the existing credential after the new one is obtained.
+            _credential = newCredential;
+            btnSignIn.Text = "🔄 Sign in again";
+            await LoadStorageAccountsAsync();
+        }
+
+        private async Task LoadStorageAccountsAsync()
+        {
+            if (_credential == null) return;
+
+            SetBusy(true, "Discovering storage accounts...");
             lstAccounts.Items.Clear();
             lstContainers.Items.Clear();
             lstBlobs.Items.Clear();
             btnOpen.Enabled = false;
             _storageAccounts = Array.Empty<StorageAccountInfo>();
-            _credential = null;
 
             try
             {
-                _credential = await _azureAccountService.SignInAsync();
-                SetBusy(true, "Discovering storage accounts...");
-
                 _storageAccounts = await _azureAccountService.ListStorageAccountsAsync(_credential);
+
+                // Confirm the credential is working by caching it after first successful use.
+                _azureAccountService.SetCachedCredential(_credential);
 
                 foreach (var account in _storageAccounts)
                     lstAccounts.Items.Add(account);
@@ -58,9 +102,9 @@ namespace ParquetExplorer
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Sign-in failed:\n{ex.Message}", "Sign-In Error",
+                MessageBox.Show($"Failed to discover accounts:\n{ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
-                lblSignInStatus.Text = "Sign-in failed.";
+                lblSignInStatus.Text = "Failed to discover accounts.";
             }
             finally
             {

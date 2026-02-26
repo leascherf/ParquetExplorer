@@ -89,19 +89,13 @@ namespace ParquetExplorer
             await OpenFromAzureAsync();
         }
 
-        private async void openAzureSignInToolStripMenuItem_Click(object sender, EventArgs e)
-        {
-            await OpenFromAzureSignInAsync();
-        }
-
-        private async void btnOpenAzureSignIn_Click(object sender, EventArgs e)
-        {
-            await OpenFromAzureSignInAsync();
-        }
-
         private async Task OpenFromAzureAsync()
         {
-            using var dlg = new AzureBlobBrowseForm(_azureBlobService);
+            var credential = _azureAccountService.IsSignedIn
+                ? _azureAccountService.GetCachedCredential()
+                : null;
+
+            using var dlg = new AzureSignInBrowseForm(_azureAccountService, _azureBlobService, credential);
             if (dlg.ShowDialog(this) != DialogResult.OK) return;
 
             string? tempFile = dlg.SelectedTempFilePath;
@@ -137,48 +131,6 @@ namespace ParquetExplorer
             finally
             {
                 // Clean up the temporary file after loading
-                try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); }
-                catch { /* best effort */ }
-            }
-        }
-
-        private async Task OpenFromAzureSignInAsync()
-        {
-            using var dlg = new AzureSignInBrowseForm(_azureAccountService, _azureBlobService);
-            if (dlg.ShowDialog(this) != DialogResult.OK) return;
-
-            string? tempFile = dlg.SelectedTempFilePath;
-            string? displayName = dlg.SelectedBlobDisplayName;
-            if (tempFile == null) return;
-
-            toolStripStatusLabel1.Text = "Loading...";
-            try
-            {
-                await _explorer.LoadFileAsync(tempFile);
-
-                var fileInfo = new System.IO.FileInfo(tempFile);
-                lblFilePath.Text = $"☁  {displayName}";
-                lblFilePath.ForeColor = System.Drawing.Color.FromArgb(40, 56, 72);
-                lblFilePath.Font = new System.Drawing.Font("Segoe UI", 9f);
-
-                cmbFilterColumn.Items.Clear();
-                cmbFilterColumn.Items.Add("(All Columns)");
-                foreach (var col in _explorer.ColumnNames)
-                    cmbFilterColumn.Items.Add(col);
-                cmbFilterColumn.SelectedIndex = 0;
-
-                txtFilter.Text = string.Empty;
-                RefreshGrid();
-                toolStripStatusLabel1.Text = $"✓  Loaded {_explorer.TotalRowCount:N0} rows  |  {_explorer.ColumnNames.Count} columns  |  {fileInfo.Length / 1024.0 / 1024.0:F2} MB";
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show($"Error loading blob:\n{ex.Message}", "Error",
-                    MessageBoxButtons.OK, MessageBoxIcon.Error);
-                toolStripStatusLabel1.Text = "⚠  Error loading blob";
-            }
-            finally
-            {
                 try { if (System.IO.File.Exists(tempFile)) System.IO.File.Delete(tempFile); }
                 catch { /* best effort */ }
             }
