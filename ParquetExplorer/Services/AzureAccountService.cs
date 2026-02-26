@@ -39,7 +39,7 @@ namespace ParquetExplorer.Services
             // prompt appears.
             await credential.GetTokenAsync(
                 new TokenRequestContext(new[] { "https://management.azure.com/.default" }),
-                cancellationToken);
+                cancellationToken).ConfigureAwait(false);
 
             _clientFactory.SetCredential(credential);
         }
@@ -52,11 +52,11 @@ namespace ParquetExplorer.Services
             var armClient = _clientFactory.CreateArmClient();
             var accounts = new List<StorageAccountInfo>();
 
-            await foreach (var subscription in armClient.GetSubscriptions().GetAllAsync(cancellationToken))
+            await foreach (var subscription in armClient.GetSubscriptions().GetAllAsync(cancellationToken).ConfigureAwait(false))
             {
                 string subscriptionName = subscription.Data.DisplayName;
 
-                await foreach (var account in subscription.GetStorageAccountsAsync(cancellationToken: cancellationToken))
+                await foreach (var account in subscription.GetStorageAccountsAsync(cancellationToken: cancellationToken).ConfigureAwait(false))
                 {
                     Uri? blobEndpoint = account.Data.PrimaryEndpoints?.BlobUri;
                     if (blobEndpoint == null) continue;

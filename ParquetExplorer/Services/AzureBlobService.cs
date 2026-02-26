@@ -22,7 +22,7 @@ namespace ParquetExplorer.Services
         {
             var client = new BlobServiceClient(connectionString);
             var containers = new List<string>();
-            await foreach (var container in client.GetBlobContainersAsync())
+            await foreach (var container in client.GetBlobContainersAsync().ConfigureAwait(false))
                 containers.Add(container.Name);
             return containers;
         }
@@ -31,7 +31,7 @@ namespace ParquetExplorer.Services
         {
             var containerClient = new BlobContainerClient(connectionString, containerName);
             var blobs = new List<string>();
-            await foreach (var blob in containerClient.GetBlobsAsync(prefix: prefix))
+            await foreach (var blob in containerClient.GetBlobsAsync(prefix: prefix).ConfigureAwait(false))
                 blobs.Add(blob.Name);
             return blobs;
         }
@@ -44,7 +44,7 @@ namespace ParquetExplorer.Services
             string extension = Path.GetExtension(blobName);
             string tempFile = Path.Combine(Path.GetTempPath(), $"parquetexplorer_{Guid.NewGuid()}{extension}");
 
-            await blobClient.DownloadToAsync(tempFile);
+            await blobClient.DownloadToAsync(tempFile).ConfigureAwait(false);
             return tempFile;
         }
 
@@ -57,7 +57,7 @@ namespace ParquetExplorer.Services
         {
             var client = _clientFactory.CreateBlobServiceClient(serviceUri);
             var containers = new List<string>();
-            await foreach (var container in client.GetBlobContainersAsync())
+            await foreach (var container in client.GetBlobContainersAsync().ConfigureAwait(false))
                 containers.Add(container.Name);
             return containers;
         }
@@ -67,7 +67,7 @@ namespace ParquetExplorer.Services
             var serviceClient = _clientFactory.CreateBlobServiceClient(serviceUri);
             var containerClient = serviceClient.GetBlobContainerClient(containerName);
             var blobs = new List<string>();
-            await foreach (var blob in containerClient.GetBlobsAsync(prefix: prefix))
+            await foreach (var blob in containerClient.GetBlobsAsync(prefix: prefix).ConfigureAwait(false))
                 blobs.Add(blob.Name);
             return blobs;
         }
@@ -81,7 +81,7 @@ namespace ParquetExplorer.Services
             string extension = Path.GetExtension(blobName);
             string tempFile = Path.Combine(Path.GetTempPath(), $"parquetexplorer_{Guid.NewGuid()}{extension}");
 
-            await blobClient.DownloadToAsync(tempFile);
+            await blobClient.DownloadToAsync(tempFile).ConfigureAwait(false);
             return tempFile;
         }
     }
