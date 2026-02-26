@@ -1,4 +1,3 @@
-using Azure.Core;
 using ParquetExplorer.Models;
 using ParquetExplorer.Services.Interfaces;
 
@@ -9,12 +8,16 @@ namespace ParquetExplorer
     /// lists all accessible storage accounts, containers, and blobs,
     /// and lets them pick a blob to open.
     /// <para>
+    /// Authentication state is owned by the <see cref="IAzureClientFactory"/> singleton
+    /// (injected via <see cref="IAzureAccountService"/>), so closing this dialog does
+    /// not dispose of the global session.  On reopening, the dialog detects the existing
+    /// session and skips the sign-in step automatically.
+    /// </para>
+    /// <para>
     /// Data is lazily loaded from <see cref="IAzureSessionManager"/> on first access
     /// and written back after every successful API call. Use the Refresh button to
     /// force a fresh API call at the appropriate cache level.
     /// </para>
-    /// When a <paramref name="existingCredential"/> is supplied the sign-in step is
-    /// skipped and the storage accounts are loaded automatically on startup.
     /// </summary>
     public partial class AzureSignInBrowseForm : Form
     {
@@ -22,7 +25,6 @@ namespace ParquetExplorer
         private readonly IAzureBlobService _azureBlobService;
         private readonly IAzureSessionManager _sessionManager;
 
-        private TokenCredential? _credential;
         private IReadOnlyList<StorageAccountInfo> _storageAccounts = Array.Empty<StorageAccountInfo>();
 
         /// <summary>Local temp-file path of the downloaded blob (null if cancelled).</summary>
@@ -31,24 +33,19 @@ namespace ParquetExplorer
         /// <summary>Display name shown in the main form title bar (e.g. "account/container/blob").</summary>
         public string? SelectedBlobDisplayName { get; private set; }
 
-        /// <summary>
-        /// Creates a new dialog. Pass an <paramref name="existingCredential"/> to bypass the
-        /// interactive sign-in step when the user has already authenticated in this session.
-        /// </summary>
         public AzureSignInBrowseForm(IAzureAccountService azureAccountService, IAzureBlobService azureBlobService,
-            IAzureSessionManager sessionManager, TokenCredential? existingCredential = null)
+            IAzureSessionManager sessionManager)
         {
             _azureAccountService = azureAccountService;
             _azureBlobService = azureBlobService;
             _sessionManager = sessionManager;
-            _credential = existingCredential;
             InitializeComponent();
         }
 
         protected override async void OnLoad(EventArgs e)
         {
             base.OnLoad(e);
-            if (_credential != null)
+            if (_azureAccountService.IsSignedIn)
             {
                 btnSignIn.Text = "🔄 Sign in again";
                 lblSignInStatus.Text = "Already signed in — loading storage accounts...";
@@ -60,10 +57,9 @@ namespace ParquetExplorer
         {
             SetBusy(true, "Signing in — a browser window will open...");
 
-            TokenCredential? newCredential;
             try
             {
-                newCredential = await _azureAccountService.SignInAsync();
+                await _azureAccountService.SignInAsync();
             }
             catch (Exception ex)
             {
@@ -74,8 +70,6 @@ namespace ParquetExplorer
                 return;
             }
 
-            // Only replace the existing credential after the new one is obtained.
-            _credential = newCredential;
             btnSignIn.Text = "🔄 Sign in again";
             // A new sign-in means the account list may have changed — drop cached data.
             _sessionManager.Refresh(CacheLevel.Accounts);
@@ -113,7 +107,7 @@ namespace ParquetExplorer
 
         private async Task LoadStorageAccountsAsync()
         {
-            if (_credential == null) return;
+            if (!_azureAccountService.IsSignedIn) return;
 
             // Clear all lists at the start, regardless of whether data comes from cache.
             lstAccounts.Items.Clear();
@@ -138,10 +132,7 @@ namespace ParquetExplorer
             SetBusy(true, "Discovering storage accounts...");
             try
             {
-                _storageAccounts = await _azureAccountService.ListStorageAccountsAsync(_credential);
-
-                // Confirm credential works and write to cache.
-                _azureAccountService.SetCachedCredential(_credential);
+                _storageAccounts = await _azureAccountService.ListStorageAccountsAsync();
                 _sessionManager.CacheAccounts(_storageAccounts);
 
                 foreach (var account in _storageAccounts)
@@ -167,14 +158,15 @@ namespace ParquetExplorer
 
         private async void lstAccounts_SelectedIndexChanged(object sender, EventArgs e)
         {
-            if (lstAccounts.SelectedItem is not StorageAccountInfo account || _credential == null) return;
+            if (lstAccounts.SelectedItem is not StorageAccountInfo account
+                || !_azureAccountService.IsSignedIn) return;
 
             await LoadContainersAsync(account);
         }
 
         private async Task LoadContainersAsync(StorageAccountInfo account)
         {
-            if (_credential == null) return;
+            if (!_azureAccountService.IsSignedIn) return;
 
             // Clear lists at the start, regardless of cache hit/miss.
             lstContainers.Items.Clear();
@@ -195,7 +187,7 @@ namespace ParquetExplorer
             SetBusy(true, $"Loading containers in '{account.Name}'...");
             try
             {
-                var containers = await _azureBlobService.ListContainersAsync(account.BlobEndpoint, _credential);
+                var containers = await _azureBlobService.ListContainersAsync(account.BlobEndpoint);
                 _sessionManager.CacheContainers(account.BlobEndpoint, containers);
 
                 foreach (var c in containers)
@@ -219,14 +211,14 @@ namespace ParquetExplorer
         {
             if (lstAccounts.SelectedItem is not StorageAccountInfo account
                 || lstContainers.SelectedItem is not string container
-                || _credential == null) return;
+                || !_azureAccountService.IsSignedIn) return;
 
             await LoadBlobsAsync(account, container);
         }
 
         private async Task LoadBlobsAsync(StorageAccountInfo account, string container)
         {
-            if (_credential == null) return;
+            if (!_azureAccountService.IsSignedIn) return;
 
             // Clear the blob list at the start, regardless of cache hit/miss.
             lstBlobs.Items.Clear();
@@ -246,7 +238,7 @@ namespace ParquetExplorer
             SetBusy(true, $"Loading blobs in '{container}'...");
             try
             {
-                var blobs = await _azureBlobService.ListBlobsAsync(account.BlobEndpoint, _credential, container);
+                var blobs = await _azureBlobService.ListBlobsAsync(account.BlobEndpoint, container);
                 _sessionManager.CacheBlobs(account.BlobEndpoint, container, blobs);
 
                 foreach (var b in blobs)
@@ -276,13 +268,13 @@ namespace ParquetExplorer
             if (lstAccounts.SelectedItem is not StorageAccountInfo account
                 || lstContainers.SelectedItem is not string container
                 || lstBlobs.SelectedItem is not string blobName
-                || _credential == null) return;
+                || !_azureAccountService.IsSignedIn) return;
 
             SetBusy(true, $"Downloading '{blobName}'...");
             try
             {
                 SelectedTempFilePath = await _azureBlobService.DownloadBlobToTempFileAsync(
-                    account.BlobEndpoint, _credential, container, blobName);
+                    account.BlobEndpoint, container, blobName);
                 SelectedBlobDisplayName = $"{account.Name}/{container}/{blobName}";
                 DialogResult = DialogResult.OK;
                 Close();

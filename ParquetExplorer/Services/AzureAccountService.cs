@@ -1,6 +1,4 @@
-using Azure.Core;
 using Azure.Identity;
-using Azure.ResourceManager;
 using Azure.ResourceManager.Storage;
 using ParquetExplorer.Models;
 using ParquetExplorer.Services.Interfaces;
@@ -10,36 +8,48 @@ namespace ParquetExplorer.Services
     /// <summary>
     /// Authenticates the user via an interactive browser sign-in and
     /// discovers all Azure Storage accounts across their subscriptions.
-    /// The credential is cached in memory for the lifetime of the application.
+    /// The <see cref="TokenCredential"/> is stored in the <see cref="IAzureClientFactory"/>
+    /// singleton so that both the management plane (<c>ArmClient</c>) and the data plane
+    /// (<c>BlobServiceClient</c>) share the same MSAL token cache and the user is never
+    /// prompted to log in twice.
     /// </summary>
     public class AzureAccountService : IAzureAccountService
     {
-        private TokenCredential? _cachedCredential;
+        private readonly IAzureClientFactory _clientFactory;
 
-        /// <inheritdoc/>
-        public bool IsSignedIn => _cachedCredential != null;
-
-        /// <inheritdoc/>
-        public TokenCredential? GetCachedCredential() => _cachedCredential;
-
-        /// <inheritdoc/>
-        public void SetCachedCredential(TokenCredential credential) =>
-            _cachedCredential = credential;
-
-        public Task<TokenCredential> SignInAsync(CancellationToken cancellationToken = default)
+        public AzureAccountService(IAzureClientFactory clientFactory)
         {
-            // InteractiveBrowserCredential opens the default browser for OAuth sign-in.
-            // The credential is NOT cached here; the caller must call SetCachedCredential
-            // after confirming the credential works (e.g. after a successful API call).
-            var credential = new InteractiveBrowserCredential();
-            return Task.FromResult<TokenCredential>(credential);
+            _clientFactory = clientFactory;
         }
 
+        /// <inheritdoc/>
+        public bool IsSignedIn => _clientFactory.IsSignedIn;
+
+        /// <inheritdoc/>
+        public Task SignInAsync(CancellationToken cancellationToken = default)
+        {
+            // InteractiveBrowserCredential opens the default browser for OAuth sign-in.
+            // The browser prompt is deferred until the first GetTokenAsync call (lazy).
+            // MSAL serialises concurrent token requests internally, so if multiple
+            // Azure SDK operations are initiated before the first token is acquired they
+            // will all queue behind the same browser interaction rather than opening
+            // multiple windows.
+            //
+            // Storing the credential in the factory ensures that every Azure SDK client
+            // created afterwards (ArmClient, BlobServiceClient, …) shares the same MSAL
+            // session and can silently acquire tokens for additional scopes without
+            // prompting the user again.
+            var credential = new InteractiveBrowserCredential();
+            _clientFactory.SetCredential(credential);
+            return Task.CompletedTask;
+        }
+
+        /// <inheritdoc/>
         public async Task<IReadOnlyList<StorageAccountInfo>> ListStorageAccountsAsync(
-            TokenCredential credential,
             CancellationToken cancellationToken = default)
         {
-            var armClient = new ArmClient(credential);
+            // The ArmClient is created by the factory using the shared credential.
+            var armClient = _clientFactory.CreateArmClient();
             var accounts = new List<StorageAccountInfo>();
 
             await foreach (var subscription in armClient.GetSubscriptions().GetAllAsync(cancellationToken))

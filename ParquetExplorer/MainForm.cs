@@ -93,11 +93,7 @@ namespace ParquetExplorer
 
         private async Task OpenFromAzureAsync()
         {
-            var credential = _azureAccountService.IsSignedIn
-                ? _azureAccountService.GetCachedCredential()
-                : null;
-
-            using var dlg = new AzureSignInBrowseForm(_azureAccountService, _azureBlobService, _sessionManager, credential);
+            using var dlg = new AzureSignInBrowseForm(_azureAccountService, _azureBlobService, _sessionManager);
             if (dlg.ShowDialog(this) != DialogResult.OK) return;
 
             string? tempFile = dlg.SelectedTempFilePath;
