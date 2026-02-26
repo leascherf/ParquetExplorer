@@ -38,6 +38,17 @@ namespace ParquetExplorer
 
             // Start with the Azure panel collapsed; it expands on demand.
             splitContainerAzure.Panel1Collapsed = true;
+
+            // SplitterDistance must be set after the form has its actual width.
+            Load += (_, _) =>
+            {
+                int desired = 280;
+                int max = splitContainerAzure.Width
+                          - splitContainerAzure.Panel2MinSize
+                          - splitContainerAzure.SplitterWidth;
+                if (desired >= splitContainerAzure.Panel1MinSize && desired <= max)
+                    splitContainerAzure.SplitterDistance = desired;
+            };
         }
 
         private static void EnableDoubleBuffer(DataGridView dgv)

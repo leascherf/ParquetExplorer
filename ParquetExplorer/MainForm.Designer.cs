@@ -213,7 +213,6 @@ namespace ParquetExplorer
             splitContainerAzure.Panel1MinSize = 220;
             splitContainerAzure.Panel2MinSize = 300;
             splitContainerAzure.Panel2.Controls.Add(dataGridView1);
-            splitContainerAzure.SplitterDistance = 280;
 
             // lblFilePath
             lblFilePath = new System.Windows.Forms.Label();
