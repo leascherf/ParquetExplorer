@@ -38,6 +38,9 @@ namespace ParquetExplorer
 
         private bool _isScrolling = false;
 
+        private string? _lastBlobPickAccountName;
+        private string? _lastBlobPickContainer;
+
         public CompareForm(IParquetService parquetService, ICompareService compareService,
             IAzureAccountService azureAccountService, IAzureBlobService azureBlobService,
             IAzureSessionManager sessionManager)
@@ -85,8 +88,20 @@ namespace ParquetExplorer
         private (string? TempFilePath, string? DisplayName) PickBlob()
         {
             using var dlg = new AzureSignInBrowseForm(_azureAccountService, _azureBlobService, _sessionManager);
+            dlg.InitialAccountName = _lastBlobPickAccountName;
+            dlg.InitialContainer = _lastBlobPickContainer;
             if (dlg.ShowDialog(this) == DialogResult.OK && dlg.SelectedTempFilePath != null)
+            {
+                // Parse SelectedBlobDisplayName (format: "accountName/containerName/blobName") to
+                // remember the location so the next picker opens in the same section.
+                var parts = dlg.SelectedBlobDisplayName?.Split('/', 3);
+                if (parts?.Length >= 2)
+                {
+                    _lastBlobPickAccountName = parts[0];
+                    _lastBlobPickContainer = parts[1];
+                }
                 return (dlg.SelectedTempFilePath, dlg.SelectedBlobDisplayName);
+            }
             return (null, null);
         }
 

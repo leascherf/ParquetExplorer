@@ -33,6 +33,19 @@ namespace ParquetExplorer
         /// <summary>Display name shown in the main form title bar (e.g. "account/container/blob").</summary>
         public string? SelectedBlobDisplayName { get; private set; }
 
+        /// <summary>
+        /// When set before <see cref="Form.ShowDialog()"/>, the dialog will pre-select the
+        /// storage account whose <see cref="StorageAccountInfo.Name"/> matches this value.
+        /// </summary>
+        public string? InitialAccountName { get; set; }
+
+        /// <summary>
+        /// When set before <see cref="Form.ShowDialog()"/>, the dialog will pre-select this
+        /// container after the account list is loaded (only effective when
+        /// <see cref="InitialAccountName"/> is also set and a matching account is found).
+        /// </summary>
+        public string? InitialContainer { get; set; }
+
         public AzureSignInBrowseForm(IAzureAccountService azureAccountService, IAzureBlobService azureBlobService,
             IAzureSessionManager sessionManager)
         {
@@ -125,6 +138,7 @@ namespace ParquetExplorer
                     lstAccounts.Items.Add(account);
                 lblSignInStatus.Text = $"Signed in — {_storageAccounts.Count} storage account(s) found. (cached)";
                 lblStatus.Text = string.Empty;
+                TryPreSelectAccount();
                 return;
             }
 
@@ -143,6 +157,7 @@ namespace ParquetExplorer
                     : "Signed in — no storage accounts found.";
 
                 lblStatus.Text = string.Empty;
+                TryPreSelectAccount();
             }
             catch (Exception ex)
             {
@@ -180,6 +195,7 @@ namespace ParquetExplorer
                 foreach (var c in cached)
                     lstContainers.Items.Add(c);
                 lblStatus.Text = $"{lstContainers.Items.Count} container(s) in '{account.Name}'. (cached)";
+                TryPreSelectContainer();
                 return;
             }
 
@@ -194,6 +210,7 @@ namespace ParquetExplorer
                     lstContainers.Items.Add(c);
 
                 lblStatus.Text = $"{lstContainers.Items.Count} container(s) in '{account.Name}'.";
+                TryPreSelectContainer();
             }
             catch (Exception ex)
             {
@@ -307,6 +324,32 @@ namespace ParquetExplorer
             Cursor = busy ? Cursors.WaitCursor : Cursors.Default;
             if (!string.IsNullOrEmpty(message))
                 lblStatus.Text = message;
+        }
+
+        private void TryPreSelectAccount()
+        {
+            if (InitialAccountName == null) return;
+            for (int i = 0; i < lstAccounts.Items.Count; i++)
+            {
+                if (lstAccounts.Items[i] is StorageAccountInfo a && a.Name == InitialAccountName)
+                {
+                    lstAccounts.SelectedIndex = i;
+                    break;
+                }
+            }
+        }
+
+        private void TryPreSelectContainer()
+        {
+            if (InitialContainer == null) return;
+            for (int i = 0; i < lstContainers.Items.Count; i++)
+            {
+                if (lstContainers.Items[i]?.ToString() == InitialContainer)
+                {
+                    lstContainers.SelectedIndex = i;
+                    break;
+                }
+            }
         }
     }
 }
