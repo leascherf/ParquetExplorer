@@ -299,7 +299,7 @@ namespace ParquetExplorer
 
         private void OpenCompareForm()
         {
-            var form = new CompareForm(_parquetService, _compareService);
+            var form = new CompareForm(_parquetService, _compareService, _azureAccountService, _azureBlobService, _sessionManager);
             form.Show(this);
         }
 

@@ -14,6 +14,9 @@ namespace ParquetExplorer
     {
         private readonly IParquetService _parquetService;
         private readonly ICompareService _compareService;
+        private readonly IAzureAccountService _azureAccountService;
+        private readonly IAzureBlobService _azureBlobService;
+        private readonly IAzureSessionManager _sessionManager;
 
         private DataTable _leftTable = new();
         private DataTable _rightTable = new();
@@ -35,10 +38,15 @@ namespace ParquetExplorer
 
         private bool _isScrolling = false;
 
-        public CompareForm(IParquetService parquetService, ICompareService compareService)
+        public CompareForm(IParquetService parquetService, ICompareService compareService,
+            IAzureAccountService azureAccountService, IAzureBlobService azureBlobService,
+            IAzureSessionManager sessionManager)
         {
             _parquetService = parquetService;
             _compareService = compareService;
+            _azureAccountService = azureAccountService;
+            _azureBlobService = azureBlobService;
+            _sessionManager = sessionManager;
             InitializeComponent();
 
             cmbFilter.Items.AddRange(new object[] { "All", "Different", "Left Only", "Right Only", "Same" });
@@ -48,30 +56,38 @@ namespace ParquetExplorer
 
         private async void btnOpenLeft_Click(object sender, EventArgs e)
         {
-            var path = PickFile();
-            if (path == null) return;
-            lblLeftFile.Text = $"◁ Left:  {path}";
-            try { _leftTable = await _parquetService.LoadAsync(path); }
+            var (tempPath, displayName) = PickBlob();
+            if (tempPath == null) return;
+            lblLeftFile.Text = $"◁ Left:  {displayName}";
+            try { _leftTable = await _parquetService.LoadAsync(tempPath); }
             catch (Exception ex) { MessageBox.Show($"Error loading left file:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally
+            {
+                try { if (System.IO.File.Exists(tempPath)) System.IO.File.Delete(tempPath); }
+                catch { /* best effort */ }
+            }
         }
 
         private async void btnOpenRight_Click(object sender, EventArgs e)
         {
-            var path = PickFile();
-            if (path == null) return;
-            lblRightFile.Text = $"▷ Right:  {path}";
-            try { _rightTable = await _parquetService.LoadAsync(path); }
+            var (tempPath, displayName) = PickBlob();
+            if (tempPath == null) return;
+            lblRightFile.Text = $"▷ Right:  {displayName}";
+            try { _rightTable = await _parquetService.LoadAsync(tempPath); }
             catch (Exception ex) { MessageBox.Show($"Error loading right file:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
+            finally
+            {
+                try { if (System.IO.File.Exists(tempPath)) System.IO.File.Delete(tempPath); }
+                catch { /* best effort */ }
+            }
         }
 
-        private static string? PickFile()
+        private (string? TempFilePath, string? DisplayName) PickBlob()
         {
-            using var dlg = new OpenFileDialog
-            {
-                Title = "Open Parquet File",
-                Filter = "Parquet Files (*.parquet)|*.parquet|All Files (*.*)|*.*"
-            };
-            return dlg.ShowDialog() == DialogResult.OK ? dlg.FileName : null;
+            using var dlg = new AzureSignInBrowseForm(_azureAccountService, _azureBlobService, _sessionManager);
+            if (dlg.ShowDialog(this) == DialogResult.OK && dlg.SelectedTempFilePath != null)
+                return (dlg.SelectedTempFilePath, dlg.SelectedBlobDisplayName);
+            return (null, null);
         }
 
         private void btnCompare_Click(object sender, EventArgs e)
