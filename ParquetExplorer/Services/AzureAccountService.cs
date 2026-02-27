@@ -27,6 +27,27 @@ namespace ParquetExplorer.Services
         public bool IsSignedIn => _clientFactory.IsSignedIn;
 
         /// <inheritdoc/>
+        public async Task<bool> TrySignInWithEnvironmentVariablesAsync(CancellationToken cancellationToken = default)
+        {
+            var clientId = Environment.GetEnvironmentVariable("AZURE_CLIENT_ID");
+            var clientSecret = Environment.GetEnvironmentVariable("AZURE_CLIENT_SECRET");
+            var tenantId = Environment.GetEnvironmentVariable("AZURE_TENANT_ID");
+
+            if (string.IsNullOrEmpty(clientId) || string.IsNullOrEmpty(clientSecret) || string.IsNullOrEmpty(tenantId))
+                return false;
+
+            var credential = new ClientSecretCredential(tenantId, clientId, clientSecret);
+
+            // Eagerly validate the credential so that any errors surface here.
+            await credential.GetTokenAsync(
+                new TokenRequestContext(new[] { "https://management.azure.com/.default" }),
+                cancellationToken).ConfigureAwait(false);
+
+            _clientFactory.SetCredential(credential);
+            return true;
+        }
+
+        /// <inheritdoc/>
         public async Task SignInAsync(CancellationToken cancellationToken = default)
         {
             var credential = new InteractiveBrowserCredential();

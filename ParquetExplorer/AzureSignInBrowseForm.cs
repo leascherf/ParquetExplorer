@@ -63,6 +63,30 @@ namespace ParquetExplorer
                 btnSignIn.Text = "🔄 Sign in again";
                 lblSignInStatus.Text = "Already signed in — loading storage accounts...";
                 await LoadStorageAccountsAsync();
+                return;
+            }
+
+            // Try to authenticate automatically with environment variables.
+            SetBusy(true, "Checking environment variables for Azure credentials...");
+            bool signedIn = false;
+            try
+            {
+                signedIn = await _azureAccountService.TrySignInWithEnvironmentVariablesAsync();
+            }
+            catch
+            {
+                lblSignInStatus.Text = "Environment variable sign-in failed.";
+            }
+            finally
+            {
+                SetBusy(false, "");
+            }
+
+            if (signedIn)
+            {
+                btnSignIn.Text = "🔄 Sign in again";
+                lblSignInStatus.Text = "Signed in via environment variables — loading storage accounts...";
+                await LoadStorageAccountsAsync();
             }
         }
 

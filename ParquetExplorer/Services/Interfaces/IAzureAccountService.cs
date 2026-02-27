@@ -17,6 +17,14 @@ namespace ParquetExplorer.Services.Interfaces
         bool IsSignedIn { get; }
 
         /// <summary>
+        /// Attempts to sign in using the <c>AZURE_CLIENT_ID</c>, <c>AZURE_CLIENT_SECRET</c>,
+        /// and <c>AZURE_TENANT_ID</c> environment variables (service-principal / client-credentials
+        /// flow).  Returns <c>true</c> when all three variables are present and the credential is
+        /// validated successfully; returns <c>false</c> when any variable is missing.
+        /// </summary>
+        Task<bool> TrySignInWithEnvironmentVariablesAsync(CancellationToken cancellationToken = default);
+
+        /// <summary>
         /// Initiates an interactive browser sign-in, stores the resulting credential in
         /// the <see cref="IAzureClientFactory"/> singleton, and returns when complete.
         /// </summary>
