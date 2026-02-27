@@ -11,6 +11,7 @@
     <PackageReference Include="Azure.ResourceManager.Storage" Version="1.6.0" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.22.2" />
     <PackageReference Include="Parquet.Net" Version="4.24.0" />
+    <PackageReference Include="Renci.SshNet" Version="1.0.0" />
   </ItemGroup>
 
 </Project>

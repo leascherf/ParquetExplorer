@@ -34,6 +34,7 @@ static class Program
         services.AddSingleton<IAzureBlobService, AzureBlobService>();
         services.AddSingleton<IAzureAccountService, AzureAccountService>();
         services.AddSingleton<IAzureSessionManager, AzureSessionManager>();
+        services.AddSingleton<ISftpService, SftpService>();
 
         // Register forms as transient so each resolve creates a fresh instance
         services.AddTransient<MainForm>();

@@ -13,12 +13,13 @@ namespace ParquetExplorer
         private readonly IAzureBlobService _azureBlobService;
         private readonly IAzureAccountService _azureAccountService;
         private readonly IAzureSessionManager _sessionManager;
+        private readonly ISftpService _sftpService;
 
         // The Azure Explorer panel is constructed with DI dependencies and added
         // programmatically after InitializeComponent so the designer stays clean.
         private readonly AzureExplorerPanel _azurePanel;
 
-        public MainForm(IExplorerService explorer, IParquetService parquetService, ICompareService compareService, IAzureBlobService azureBlobService, IAzureAccountService azureAccountService, IAzureSessionManager sessionManager)
+        public MainForm(IExplorerService explorer, IParquetService parquetService, ICompareService compareService, IAzureBlobService azureBlobService, IAzureAccountService azureAccountService, IAzureSessionManager sessionManager, ISftpService sftpService)
         {
             _explorer = explorer;
             _parquetService = parquetService;
@@ -26,6 +27,7 @@ namespace ParquetExplorer
             _azureBlobService = azureBlobService;
             _azureAccountService = azureAccountService;
             _sessionManager = sessionManager;
+            _sftpService = sftpService;
             InitializeComponent();
             EnableDoubleBuffer(dataGridView1);
 
@@ -307,7 +309,7 @@ namespace ParquetExplorer
 
         private void OpenCompareForm()
         {
-            var form = new CompareForm(_parquetService, _compareService, _azureAccountService, _azureBlobService, _sessionManager);
+            var form = new CompareForm(_parquetService, _compareService, _azureAccountService, _azureBlobService, _sessionManager, _sftpService);
             form.Show(this);
         }
 

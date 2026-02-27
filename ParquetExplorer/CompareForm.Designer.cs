@@ -66,9 +66,9 @@ namespace ParquetExplorer
             pnlTop.Controls.Add(chkShowEmptyColumns);
 
             // btnOpenLeft
-            btnOpenLeft.Text = "📂 Open Left";
+            btnOpenLeft.Text = "📂 Open Left File";
             btnOpenLeft.Location = new System.Drawing.Point(6, 7);
-            btnOpenLeft.Size = new System.Drawing.Size(120, 28);
+            btnOpenLeft.Size = new System.Drawing.Size(130, 28);
             btnOpenLeft.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             btnOpenLeft.BackColor = System.Drawing.Color.FromArgb(220, 232, 248);
             btnOpenLeft.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(160, 190, 230);
@@ -76,9 +76,9 @@ namespace ParquetExplorer
             btnOpenLeft.Click += btnOpenLeft_Click;
 
             // btnOpenRight
-            btnOpenRight.Text = "📂 Open Right";
-            btnOpenRight.Location = new System.Drawing.Point(134, 7);
-            btnOpenRight.Size = new System.Drawing.Size(120, 28);
+            btnOpenRight.Text = "📂 Open Right File";
+            btnOpenRight.Location = new System.Drawing.Point(144, 7);
+            btnOpenRight.Size = new System.Drawing.Size(130, 28);
             btnOpenRight.FlatStyle = System.Windows.Forms.FlatStyle.Flat;
             btnOpenRight.BackColor = System.Drawing.Color.FromArgb(214, 242, 214);
             btnOpenRight.FlatAppearance.BorderColor = System.Drawing.Color.FromArgb(160, 220, 160);
@@ -87,7 +87,7 @@ namespace ParquetExplorer
 
             // btnCompare
             btnCompare.Text = "⇄ Compare";
-            btnCompare.Location = new System.Drawing.Point(262, 7);
+            btnCompare.Location = new System.Drawing.Point(282, 7);
             btnCompare.Size = new System.Drawing.Size(100, 28);
             btnCompare.BackColor = System.Drawing.Color.FromArgb(44, 123, 229);
             btnCompare.ForeColor = System.Drawing.Color.White;
@@ -98,19 +98,19 @@ namespace ParquetExplorer
 
             // lblFilter
             lblFilter.AutoSize = true;
-            lblFilter.Location = new System.Drawing.Point(378, 13);
+            lblFilter.Location = new System.Drawing.Point(398, 13);
             lblFilter.Font = new System.Drawing.Font("Segoe UI", 9f);
             lblFilter.Text = "Filter:";
 
             // cmbFilter
             cmbFilter.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            cmbFilter.Location = new System.Drawing.Point(415, 10);
+            cmbFilter.Location = new System.Drawing.Point(435, 10);
             cmbFilter.Size = new System.Drawing.Size(130, 23);
             cmbFilter.Font = new System.Drawing.Font("Segoe UI", 9f);
 
             // chkShowEmptyColumns
             chkShowEmptyColumns.AutoSize = true;
-            chkShowEmptyColumns.Location = new System.Drawing.Point(560, 12);
+            chkShowEmptyColumns.Location = new System.Drawing.Point(580, 12);
             chkShowEmptyColumns.Text = "Show Empty Columns";
             chkShowEmptyColumns.Font = new System.Drawing.Font("Segoe UI", 9f);
             chkShowEmptyColumns.CheckedChanged += chkShowEmptyColumns_CheckedChanged;
@@ -322,7 +322,7 @@ namespace ParquetExplorer
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(1400, 800);
             MinimumSize = new System.Drawing.Size(900, 600);
-            Text = "Parquet File Comparison";
+            Text = "File Comparison (Parquet / CSV / TSV / Text)";
             Font = new System.Drawing.Font("Segoe UI", 9f);
             BackColor = System.Drawing.Color.FromArgb(248, 249, 252);
             Controls.Add(pnlFiles);
