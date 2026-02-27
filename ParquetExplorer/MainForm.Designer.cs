@@ -77,7 +77,7 @@ namespace ParquetExplorer
             // openToolStripMenuItem
             openToolStripMenuItem.Name = "openToolStripMenuItem";
             openToolStripMenuItem.ShortcutKeys = System.Windows.Forms.Keys.Control | System.Windows.Forms.Keys.O;
-            openToolStripMenuItem.Text = "&Open Local File...";
+            openToolStripMenuItem.Text = "&Open File...";
             openToolStripMenuItem.Click += openToolStripMenuItem_Click;
 
             // openAzureToolStripMenuItem
@@ -117,8 +117,8 @@ namespace ParquetExplorer
             // btnOpen
             btnOpen.DisplayStyle = System.Windows.Forms.ToolStripItemDisplayStyle.Text;
             btnOpen.Name = "btnOpen";
-            btnOpen.Text = "📂 Open Local";
-            btnOpen.ToolTipText = "Open Local Parquet File (Ctrl+O)";
+            btnOpen.Text = "📂 Open File";
+            btnOpen.ToolTipText = "Open File — Local, SFTP or Azure Blob (Ctrl+O)";
             btnOpen.Margin = new System.Windows.Forms.Padding(2, 2, 2, 2);
             btnOpen.Click += btnOpen_Click;
 
@@ -220,7 +220,7 @@ namespace ParquetExplorer
             lblFilePath.Font = new System.Drawing.Font("Segoe UI", 9f, System.Drawing.FontStyle.Italic);
             lblFilePath.ForeColor = System.Drawing.Color.FromArgb(80, 100, 130);
             lblFilePath.BackColor = System.Drawing.Color.FromArgb(240, 244, 251);
-            lblFilePath.Text = "(no file loaded — use File → Open Parquet or Ctrl+O)";
+            lblFilePath.Text = "(no file loaded — use File → Open File or Ctrl+O)";
 
             // pnlBottom
             pnlBottom.Dock = System.Windows.Forms.DockStyle.Bottom;

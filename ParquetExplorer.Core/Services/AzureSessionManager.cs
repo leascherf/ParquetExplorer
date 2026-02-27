@@ -13,9 +13,13 @@ namespace ParquetExplorer.Services
         private IReadOnlyList<StorageAccountInfo>? _accountsCache;
         private readonly Dictionary<Uri, IReadOnlyList<string>> _containersCache = new();
         private readonly Dictionary<string, IReadOnlyList<string>> _blobsCache = new();
+        private readonly Dictionary<string, (IReadOnlyList<string> Prefixes, IReadOnlyList<string> Blobs)> _hierarchyCache = new();
 
         private static string BlobKey(Uri endpoint, string container) =>
             $"{endpoint.AbsoluteUri}|{container}";
+
+        private static string HierarchyKey(Uri endpoint, string container, string prefix) =>
+            $"{endpoint.AbsoluteUri}|{container}|{prefix}";
 
         // ── Storage accounts ───────────────────────────────────────────────
 
@@ -46,6 +50,18 @@ namespace ParquetExplorer.Services
         public void CacheBlobs(Uri accountEndpoint, string containerName, IReadOnlyList<string> blobs) =>
             _blobsCache[BlobKey(accountEndpoint, containerName)] = blobs;
 
+        // ── Hierarchical blob cache ────────────────────────────────────────
+
+        /// <inheritdoc/>
+        public (IReadOnlyList<string> Prefixes, IReadOnlyList<string> Blobs)? GetCachedHierarchy(
+            Uri accountEndpoint, string containerName, string prefix) =>
+            _hierarchyCache.TryGetValue(HierarchyKey(accountEndpoint, containerName, prefix), out var v) ? v : null;
+
+        /// <inheritdoc/>
+        public void CacheHierarchy(Uri accountEndpoint, string containerName, string prefix,
+            IReadOnlyList<string> prefixes, IReadOnlyList<string> blobs) =>
+            _hierarchyCache[HierarchyKey(accountEndpoint, containerName, prefix)] = (prefixes, blobs);
+
         // ── Selective refresh ──────────────────────────────────────────────
 
         /// <inheritdoc/>
@@ -58,26 +74,39 @@ namespace ParquetExplorer.Services
                     _accountsCache = null;
                     _containersCache.Clear();
                     _blobsCache.Clear();
+                    _hierarchyCache.Clear();
                     break;
 
                 case CacheLevel.Containers:
                     if (accountEndpoint != null)
                     {
                         _containersCache.Remove(accountEndpoint);
-                        // Also evict all blob entries that belong to this account.
-                        var keysToRemove = _blobsCache.Keys
-                            .Where(k => k.StartsWith(accountEndpoint.AbsoluteUri + "|", StringComparison.Ordinal))
-                            .ToList();
-                        foreach (var key in keysToRemove)
-                            _blobsCache.Remove(key);
+                        // Also evict all blob and hierarchy entries that belong to this account.
+                        var prefix = accountEndpoint.AbsoluteUri + "|";
+                        RemoveByPrefix(_blobsCache, prefix);
+                        RemoveByPrefix(_hierarchyCache, prefix);
                     }
                     break;
 
                 case CacheLevel.Blobs:
                     if (accountEndpoint != null && containerName != null)
+                    {
                         _blobsCache.Remove(BlobKey(accountEndpoint, containerName));
+                        // Evict all hierarchy entries for this container (any prefix level).
+                        var prefix = BlobKey(accountEndpoint, containerName) + "|";
+                        RemoveByPrefix(_hierarchyCache, prefix);
+                    }
                     break;
             }
+        }
+
+        private static void RemoveByPrefix<TValue>(Dictionary<string, TValue> dict, string keyPrefix)
+        {
+            var keysToRemove = dict.Keys
+                .Where(k => k.StartsWith(keyPrefix, StringComparison.Ordinal))
+                .ToList();
+            foreach (var key in keysToRemove)
+                dict.Remove(key);
         }
     }
 }

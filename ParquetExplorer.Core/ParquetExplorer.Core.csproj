@@ -11,6 +11,7 @@
     <PackageReference Include="Azure.ResourceManager.Storage" Version="1.6.0" />
     <PackageReference Include="Azure.Storage.Blobs" Version="12.22.2" />
     <PackageReference Include="Parquet.Net" Version="4.24.0" />
+    <PackageReference Include="SSH.NET" Version="2024.2.0" />
   </ItemGroup>
 
 </Project>

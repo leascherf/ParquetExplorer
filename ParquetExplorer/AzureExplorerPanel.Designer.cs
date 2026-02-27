@@ -157,6 +157,7 @@ namespace ParquetExplorer
             lstBlobs.Font = new System.Drawing.Font("Segoe UI", 9f);
             lstBlobs.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             lstBlobs.SelectedIndexChanged += lstBlobs_SelectedIndexChanged;
+            lstBlobs.DoubleClick += lstBlobs_DoubleClick;
 
             // ── tblContent (3 equal rows) ──────────────────────────────────
             tblContent.Dock = System.Windows.Forms.DockStyle.Fill;

@@ -13,12 +13,13 @@ namespace ParquetExplorer
         private readonly IAzureBlobService _azureBlobService;
         private readonly IAzureAccountService _azureAccountService;
         private readonly IAzureSessionManager _sessionManager;
+        private readonly ISftpService _sftpService;
 
         // The Azure Explorer panel is constructed with DI dependencies and added
         // programmatically after InitializeComponent so the designer stays clean.
         private readonly AzureExplorerPanel _azurePanel;
 
-        public MainForm(IExplorerService explorer, IParquetService parquetService, ICompareService compareService, IAzureBlobService azureBlobService, IAzureAccountService azureAccountService, IAzureSessionManager sessionManager)
+        public MainForm(IExplorerService explorer, IParquetService parquetService, ICompareService compareService, IAzureBlobService azureBlobService, IAzureAccountService azureAccountService, IAzureSessionManager sessionManager, ISftpService sftpService)
         {
             _explorer = explorer;
             _parquetService = parquetService;
@@ -26,6 +27,7 @@ namespace ParquetExplorer
             _azureBlobService = azureBlobService;
             _azureAccountService = azureAccountService;
             _sessionManager = sessionManager;
+            _sftpService = sftpService;
             InitializeComponent();
             EnableDoubleBuffer(dataGridView1);
 
@@ -76,21 +78,26 @@ namespace ParquetExplorer
 
         private async Task OpenFileAsync()
         {
-            using var dlg = new OpenFileDialog
-            {
-                Title = "Open Parquet File",
-                Filter = "Parquet Files (*.parquet)|*.parquet|All Files (*.*)|*.*"
-            };
+            using var dlg = new FilePickerDialog(
+                _azureAccountService, _azureBlobService, _sessionManager, _sftpService);
 
-            if (dlg.ShowDialog() != DialogResult.OK) return;
+            if (dlg.ShowDialog(this) != DialogResult.OK || dlg.SelectedFilePath == null) return;
+
+            string filePath    = dlg.SelectedFilePath;
+            string displayName = dlg.SelectedDisplayName ?? filePath;
+            bool   isTemp      = dlg.IsTempFile;
 
             toolStripStatusLabel1.Text = "Loading...";
             try
             {
-                await _explorer.LoadFileAsync(dlg.FileName);
+                await _explorer.LoadFileAsync(filePath);
 
-                var fileInfo = new System.IO.FileInfo(dlg.FileName);
-                lblFilePath.Text = $"📄  {dlg.FileName}";
+                var fileInfo = new System.IO.FileInfo(filePath);
+                string icon;
+                if (!isTemp) icon = "📄";
+                else if (displayName.StartsWith("sftp://")) icon = "🔒";
+                else icon = "☁";
+                lblFilePath.Text = $"{icon}  {displayName}";
                 lblFilePath.ForeColor = System.Drawing.Color.FromArgb(40, 56, 72);
                 lblFilePath.Font = new System.Drawing.Font("Segoe UI", 9f);
 
@@ -110,6 +117,12 @@ namespace ParquetExplorer
                 MessageBox.Show($"Error loading file:\n{ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 toolStripStatusLabel1.Text = "⚠  Error loading file";
+            }
+            finally
+            {
+                if (isTemp)
+                    try { if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath); }
+                    catch { /* best effort */ }
             }
         }
 
@@ -274,16 +287,24 @@ namespace ParquetExplorer
             using var g = dgv.CreateGraphics();
             int maxWidth = (int)g.MeasureString(new string('W', 15), dgv.Font).Width + 20;
 
-            foreach (DataGridViewColumn col in dgv.Columns)
+            dgv.SuspendLayout();
+            try
             {
-                int preferredWidth = col.GetPreferredWidth(DataGridViewAutoSizeColumnMode.DisplayedCells, true);
-                int headerWidth = col.GetPreferredWidth(DataGridViewAutoSizeColumnMode.ColumnHeader, true);
-                preferredWidth = Math.Max(preferredWidth, headerWidth);
+                foreach (DataGridViewColumn col in dgv.Columns)
+                {
+                    int preferredWidth = col.GetPreferredWidth(DataGridViewAutoSizeColumnMode.DisplayedCells, true);
+                    int headerWidth = col.GetPreferredWidth(DataGridViewAutoSizeColumnMode.ColumnHeader, true);
+                    preferredWidth = Math.Max(preferredWidth, headerWidth);
 
-                if (preferredWidth > maxWidth)
-                    col.Width = maxWidth;
-                else
-                    col.Width = preferredWidth > 50 ? preferredWidth : 50;
+                    if (preferredWidth > maxWidth)
+                        col.Width = maxWidth;
+                    else
+                        col.Width = preferredWidth > 50 ? preferredWidth : 50;
+                }
+            }
+            finally
+            {
+                dgv.ResumeLayout(false);
             }
         }
 
@@ -299,7 +320,7 @@ namespace ParquetExplorer
 
         private void OpenCompareForm()
         {
-            var form = new CompareForm(_parquetService, _compareService, _azureAccountService, _azureBlobService, _sessionManager);
+            var form = new CompareForm(_parquetService, _compareService, _azureAccountService, _azureBlobService, _sessionManager, _sftpService);
             form.Show(this);
         }
 

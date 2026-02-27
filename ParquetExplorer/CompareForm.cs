@@ -17,6 +17,7 @@ namespace ParquetExplorer
         private readonly IAzureAccountService _azureAccountService;
         private readonly IAzureBlobService _azureBlobService;
         private readonly IAzureSessionManager _sessionManager;
+        private readonly ISftpService _sftpService;
 
         private DataTable _leftTable = new();
         private DataTable _rightTable = new();
@@ -43,13 +44,14 @@ namespace ParquetExplorer
 
         public CompareForm(IParquetService parquetService, ICompareService compareService,
             IAzureAccountService azureAccountService, IAzureBlobService azureBlobService,
-            IAzureSessionManager sessionManager)
+            IAzureSessionManager sessionManager, ISftpService sftpService)
         {
             _parquetService = parquetService;
             _compareService = compareService;
             _azureAccountService = azureAccountService;
             _azureBlobService = azureBlobService;
             _sessionManager = sessionManager;
+            _sftpService = sftpService;
             InitializeComponent();
 
             cmbFilter.Items.AddRange(new object[] { "All", "Different", "Left Only", "Right Only", "Same" });
@@ -59,50 +61,54 @@ namespace ParquetExplorer
 
         private async void btnOpenLeft_Click(object sender, EventArgs e)
         {
-            var (tempPath, displayName) = PickBlob();
-            if (tempPath == null) return;
+            var (filePath, displayName, isTemp) = PickFile();
+            if (filePath == null) return;
             lblLeftFile.Text = $"◁ Left:  {displayName}";
-            try { _leftTable = await _parquetService.LoadAsync(tempPath); }
+            try { _leftTable = await _parquetService.LoadAsync(filePath); }
             catch (Exception ex) { MessageBox.Show($"Error loading left file:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
             finally
             {
-                try { if (System.IO.File.Exists(tempPath)) System.IO.File.Delete(tempPath); }
-                catch { /* best effort */ }
+                if (isTemp)
+                    try { if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath); }
+                    catch { /* best effort */ }
             }
         }
 
         private async void btnOpenRight_Click(object sender, EventArgs e)
         {
-            var (tempPath, displayName) = PickBlob();
-            if (tempPath == null) return;
+            var (filePath, displayName, isTemp) = PickFile();
+            if (filePath == null) return;
             lblRightFile.Text = $"▷ Right:  {displayName}";
-            try { _rightTable = await _parquetService.LoadAsync(tempPath); }
+            try { _rightTable = await _parquetService.LoadAsync(filePath); }
             catch (Exception ex) { MessageBox.Show($"Error loading right file:\n{ex.Message}", "Error", MessageBoxButtons.OK, MessageBoxIcon.Error); }
             finally
             {
-                try { if (System.IO.File.Exists(tempPath)) System.IO.File.Delete(tempPath); }
-                catch { /* best effort */ }
+                if (isTemp)
+                    try { if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath); }
+                    catch { /* best effort */ }
             }
         }
 
-        private (string? TempFilePath, string? DisplayName) PickBlob()
+        private (string? FilePath, string? DisplayName, bool IsTemp) PickFile()
         {
-            using var dlg = new AzureSignInBrowseForm(_azureAccountService, _azureBlobService, _sessionManager);
-            dlg.InitialAccountName = _lastBlobPickAccountName;
-            dlg.InitialContainer = _lastBlobPickContainer;
-            if (dlg.ShowDialog(this) == DialogResult.OK && dlg.SelectedTempFilePath != null)
+            using var dlg = new FilePickerDialog(
+                _azureAccountService, _azureBlobService, _sessionManager, _sftpService);
+
+            // Pre-populate the Azure account/container from the last successful pick.
+            // (FilePickerDialog opens on the Azure tab; the remembered location is applied
+            //  when the Azure sign-in flow populates the account list.)
+            if (dlg.ShowDialog(this) == DialogResult.OK && dlg.SelectedFilePath != null)
             {
-                // Parse SelectedBlobDisplayName (format: "accountName/containerName/blobName") to
-                // remember the location so the next picker opens in the same section.
-                var parts = dlg.SelectedBlobDisplayName?.Split('/', 3);
-                if (parts?.Length >= 2)
+                // Remember the last Azure pick location so the next picker opens there.
+                var parts = dlg.SelectedDisplayName?.Split('/', 3);
+                if (parts?.Length >= 2 && dlg.IsTempFile)
                 {
                     _lastBlobPickAccountName = parts[0];
                     _lastBlobPickContainer = parts[1];
                 }
-                return (dlg.SelectedTempFilePath, dlg.SelectedBlobDisplayName);
+                return (dlg.SelectedFilePath, dlg.SelectedDisplayName, dlg.IsTempFile);
             }
-            return (null, null);
+            return (null, null, false);
         }
 
         private void btnCompare_Click(object sender, EventArgs e)
