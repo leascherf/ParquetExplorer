@@ -68,14 +68,13 @@ namespace ParquetExplorer.Services
 
                 for (int r = 0; r < rowCount; r++)
                 {
-                    var row = table.NewRow();
+                    var values = new object[columnData.Length];
                     for (int ci = 0; ci < columnData.Length; ci++)
                     {
                         var data = columnData[ci].Data;
-                        var val = (data != null && r < data.Length) ? data.GetValue(r) : null;
-                        row[ci] = val ?? DBNull.Value;
+                        values[ci] = (data != null && r < data.Length) ? data.GetValue(r) ?? DBNull.Value : DBNull.Value;
                     }
-                    table.Rows.Add(row);
+                    table.Rows.Add(values);
                 }
             }
 

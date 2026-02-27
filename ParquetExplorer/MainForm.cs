@@ -274,16 +274,24 @@ namespace ParquetExplorer
             using var g = dgv.CreateGraphics();
             int maxWidth = (int)g.MeasureString(new string('W', 15), dgv.Font).Width + 20;
 
-            foreach (DataGridViewColumn col in dgv.Columns)
+            dgv.SuspendLayout();
+            try
             {
-                int preferredWidth = col.GetPreferredWidth(DataGridViewAutoSizeColumnMode.DisplayedCells, true);
-                int headerWidth = col.GetPreferredWidth(DataGridViewAutoSizeColumnMode.ColumnHeader, true);
-                preferredWidth = Math.Max(preferredWidth, headerWidth);
+                foreach (DataGridViewColumn col in dgv.Columns)
+                {
+                    int preferredWidth = col.GetPreferredWidth(DataGridViewAutoSizeColumnMode.DisplayedCells, true);
+                    int headerWidth = col.GetPreferredWidth(DataGridViewAutoSizeColumnMode.ColumnHeader, true);
+                    preferredWidth = Math.Max(preferredWidth, headerWidth);
 
-                if (preferredWidth > maxWidth)
-                    col.Width = maxWidth;
-                else
-                    col.Width = preferredWidth > 50 ? preferredWidth : 50;
+                    if (preferredWidth > maxWidth)
+                        col.Width = maxWidth;
+                    else
+                        col.Width = preferredWidth > 50 ? preferredWidth : 50;
+                }
+            }
+            finally
+            {
+                dgv.ResumeLayout(false);
             }
         }
 

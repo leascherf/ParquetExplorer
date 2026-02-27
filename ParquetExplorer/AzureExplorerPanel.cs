@@ -134,7 +134,9 @@ namespace ParquetExplorer
             if (cached != null)
             {
                 _storageAccounts = cached;
-                foreach (var a in _storageAccounts) lstAccounts.Items.Add(a);
+                lstAccounts.BeginUpdate();
+                lstAccounts.Items.AddRange(_storageAccounts.Cast<object>().ToArray());
+                lstAccounts.EndUpdate();
                 lblSignInStatus.Text = $"Signed in — {_storageAccounts.Count} account(s). (cached)";
                 lblStatus.Text = string.Empty;
                 return;
@@ -146,7 +148,9 @@ namespace ParquetExplorer
             {
                 _storageAccounts = await _azureAccountService.ListStorageAccountsAsync();
                 _sessionManager.CacheAccounts(_storageAccounts);
-                foreach (var a in _storageAccounts) lstAccounts.Items.Add(a);
+                lstAccounts.BeginUpdate();
+                lstAccounts.Items.AddRange(_storageAccounts.Cast<object>().ToArray());
+                lstAccounts.EndUpdate();
                 lblSignInStatus.Text = _storageAccounts.Count > 0
                     ? $"Signed in — {_storageAccounts.Count} account(s) found."
                     : "Signed in — no storage accounts found.";
@@ -180,7 +184,9 @@ namespace ParquetExplorer
             var cached = _sessionManager.GetCachedContainers(account.BlobEndpoint);
             if (cached != null)
             {
-                foreach (var c in cached) lstContainers.Items.Add(c);
+                lstContainers.BeginUpdate();
+                lstContainers.Items.AddRange(cached.Cast<object>().ToArray());
+                lstContainers.EndUpdate();
                 lblStatus.Text = $"{lstContainers.Items.Count} container(s). (cached)";
                 return;
             }
@@ -191,7 +197,9 @@ namespace ParquetExplorer
             {
                 var containers = await _azureBlobService.ListContainersAsync(account.BlobEndpoint);
                 _sessionManager.CacheContainers(account.BlobEndpoint, containers);
-                foreach (var c in containers) lstContainers.Items.Add(c);
+                lstContainers.BeginUpdate();
+                lstContainers.Items.AddRange(containers.Cast<object>().ToArray());
+                lstContainers.EndUpdate();
                 lblStatus.Text = $"{lstContainers.Items.Count} container(s) in '{account.Name}'.";
             }
             catch (Exception ex)
@@ -222,7 +230,9 @@ namespace ParquetExplorer
             var cached = _sessionManager.GetCachedBlobs(account.BlobEndpoint, container);
             if (cached != null)
             {
-                foreach (var b in cached) lstBlobs.Items.Add(b);
+                lstBlobs.BeginUpdate();
+                lstBlobs.Items.AddRange(cached.Cast<object>().ToArray());
+                lstBlobs.EndUpdate();
                 lblStatus.Text = $"{lstBlobs.Items.Count} blob(s). (cached)";
                 return;
             }
@@ -233,7 +243,9 @@ namespace ParquetExplorer
             {
                 var blobs = await _azureBlobService.ListBlobsAsync(account.BlobEndpoint, container);
                 _sessionManager.CacheBlobs(account.BlobEndpoint, container, blobs);
-                foreach (var b in blobs) lstBlobs.Items.Add(b);
+                lstBlobs.BeginUpdate();
+                lstBlobs.Items.AddRange(blobs.Cast<object>().ToArray());
+                lstBlobs.EndUpdate();
                 lblStatus.Text = $"{lstBlobs.Items.Count} blob(s) in '{container}'.";
             }
             catch (Exception ex)
