@@ -29,6 +29,15 @@ namespace ParquetExplorer.Services.Interfaces
         /// </summary>
         Task<string> DownloadBlobToTempFileAsync(string connectionString, string containerName, string blobName);
 
+        /// <summary>
+        /// Lists only the immediate virtual-folder prefixes and blobs at the given
+        /// <paramref name="prefix"/> level using a "/" delimiter.  Mirrors how Azure
+        /// Storage Explorer navigates large containers level-by-level instead of
+        /// enumerating every blob up front.
+        /// </summary>
+        Task<(IReadOnlyList<string> Prefixes, IReadOnlyList<string> Blobs)> ListBlobsByHierarchyAsync(
+            string connectionString, string containerName, string? prefix = null);
+
         // ── Azure AD (factory-credential) overloads ────────────────────────────
 
         /// <summary>
@@ -48,5 +57,14 @@ namespace ParquetExplorer.Services.Interfaces
         /// <see cref="IAzureClientFactory"/> and returns the path.
         /// </summary>
         Task<string> DownloadBlobToTempFileAsync(Uri serviceUri, string containerName, string blobName);
+
+        /// <summary>
+        /// Lists only the immediate virtual-folder prefixes and blobs at the given
+        /// <paramref name="prefix"/> level using a "/" delimiter.  Mirrors how Azure
+        /// Storage Explorer navigates large containers level-by-level instead of
+        /// enumerating every blob up front.
+        /// </summary>
+        Task<(IReadOnlyList<string> Prefixes, IReadOnlyList<string> Blobs)> ListBlobsByHierarchyAsync(
+            Uri serviceUri, string containerName, string? prefix = null);
     }
 }

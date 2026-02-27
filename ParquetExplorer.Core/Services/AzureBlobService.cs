@@ -48,6 +48,24 @@ namespace ParquetExplorer.Services
             return tempFile;
         }
 
+        public async Task<(IReadOnlyList<string> Prefixes, IReadOnlyList<string> Blobs)> ListBlobsByHierarchyAsync(
+            string connectionString, string containerName, string? prefix = null)
+        {
+            var containerClient = new BlobContainerClient(connectionString, containerName);
+            var prefixes = new List<string>();
+            var blobs = new List<string>();
+            await foreach (var item in containerClient
+                .GetBlobsByHierarchyAsync(delimiter: "/", prefix: prefix)
+                .ConfigureAwait(false))
+            {
+                if (item.IsPrefix)
+                    prefixes.Add(item.Prefix);
+                else
+                    blobs.Add(item.Blob.Name);
+            }
+            return (prefixes, blobs);
+        }
+
         // ── Azure AD (factory-credential) overloads ──────────────────────────
         // The BlobServiceClient is created via IAzureClientFactory, which holds the
         // same TokenCredential as the ArmClient used for account discovery.  This
@@ -83,6 +101,25 @@ namespace ParquetExplorer.Services
 
             await blobClient.DownloadToAsync(tempFile).ConfigureAwait(false);
             return tempFile;
+        }
+
+        public async Task<(IReadOnlyList<string> Prefixes, IReadOnlyList<string> Blobs)> ListBlobsByHierarchyAsync(
+            Uri serviceUri, string containerName, string? prefix = null)
+        {
+            var serviceClient = _clientFactory.CreateBlobServiceClient(serviceUri);
+            var containerClient = serviceClient.GetBlobContainerClient(containerName);
+            var prefixes = new List<string>();
+            var blobs = new List<string>();
+            await foreach (var item in containerClient
+                .GetBlobsByHierarchyAsync(delimiter: "/", prefix: prefix)
+                .ConfigureAwait(false))
+            {
+                if (item.IsPrefix)
+                    prefixes.Add(item.Prefix);
+                else
+                    blobs.Add(item.Blob.Name);
+            }
+            return (prefixes, blobs);
         }
     }
 }

@@ -50,6 +50,22 @@ namespace ParquetExplorer.Services.Interfaces
         /// <summary>Stores the blob list for the given endpoint + container.</summary>
         void CacheBlobs(Uri accountEndpoint, string containerName, IReadOnlyList<string> blobs);
 
+        // ── Hierarchical blob cache ────────────────────────────────────────
+
+        /// <summary>
+        /// Returns the cached hierarchical listing (immediate virtual-folder prefixes
+        /// and blob names) at the given prefix level, or <c>null</c> if not cached.
+        /// </summary>
+        (IReadOnlyList<string> Prefixes, IReadOnlyList<string> Blobs)? GetCachedHierarchy(
+            Uri accountEndpoint, string containerName, string prefix);
+
+        /// <summary>
+        /// Stores a hierarchical listing result in the cache, keyed by
+        /// endpoint + container + prefix.
+        /// </summary>
+        void CacheHierarchy(Uri accountEndpoint, string containerName, string prefix,
+            IReadOnlyList<string> prefixes, IReadOnlyList<string> blobs);
+
         // ── Selective refresh ──────────────────────────────────────────────
 
         /// <summary>

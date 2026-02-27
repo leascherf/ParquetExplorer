@@ -28,9 +28,10 @@ namespace ParquetExplorer
     /// so closing/hiding this panel never disposes the global session.
     /// </para>
     /// <para>
-    /// Data is lazily loaded from <see cref="IAzureSessionManager"/> and written back
-    /// after every successful API call.  Use the Refresh button to force a fresh fetch
-    /// at the relevant cache level.
+    /// Blob browsing uses hierarchical listing (virtual-folder level by level) so that
+    /// only the current directory level is fetched at a time, matching the speed of
+    /// Azure Storage Explorer.  Results are cached per level; double-clicking a folder
+    /// navigates into it, and the breadcrumb in the panel header reflects the path.
     /// </para>
     /// </summary>
     public partial class AzureExplorerPanel : UserControl
@@ -41,11 +42,32 @@ namespace ParquetExplorer
 
         private IReadOnlyList<StorageAccountInfo> _storageAccounts = Array.Empty<StorageAccountInfo>();
 
+        // ── Hierarchical blob navigation state ────────────────────────────
+        /// <summary>
+        /// Current virtual-folder prefix being browsed (e.g. "year=2024/month=01/").
+        /// Empty string means the container root.
+        /// </summary>
+        private string _currentPrefix = string.Empty;
+
         /// <summary>Raised when the user selects a blob and clicks "Open Blob".</summary>
         public event EventHandler<BlobSelectedEventArgs>? BlobOpenRequested;
 
         /// <summary>Raised when the user clicks the ✕ close button in the panel header.</summary>
         public event EventHandler? CloseRequested;
+
+        // ── Helper: item stored in lstBlobs ───────────────────────────────
+        private sealed class BlobListItem
+        {
+            public bool   IsBack    { get; init; }
+            public bool   IsFolder  { get; init; }
+            /// <summary>Full blob name or full prefix path.</summary>
+            public string FullPath  { get; init; } = "";
+            /// <summary>Short display name (filename or last folder segment).</summary>
+            public string DisplayName { get; init; } = "";
+
+            public override string ToString() =>
+                IsBack ? "📁  .." : IsFolder ? $"📁  {DisplayName}" : $"📄  {DisplayName}";
+        }
 
         public AzureExplorerPanel(
             IAzureAccountService azureAccountService,
@@ -99,7 +121,7 @@ namespace ParquetExplorer
                 if (lstContainers.SelectedItem is string container)
                 {
                     _sessionManager.Refresh(CacheLevel.Blobs, account.BlobEndpoint, container);
-                    await LoadBlobsAsync(account, container);
+                    await LoadBlobsHierarchyAsync(account, container, _currentPrefix);
                 }
                 else
                 {
@@ -179,6 +201,8 @@ namespace ParquetExplorer
             lstContainers.Items.Clear();
             lstBlobs.Items.Clear();
             btnOpen.Enabled = false;
+            _currentPrefix = string.Empty;
+            UpdateBlobsLabel();
 
             // ── Lazy load ───────────────────────────────────────────────────
             var cached = _sessionManager.GetCachedContainers(account.BlobEndpoint);
@@ -216,37 +240,45 @@ namespace ParquetExplorer
             if (lstAccounts.SelectedItem is not StorageAccountInfo account
                 || lstContainers.SelectedItem is not string container
                 || !_azureAccountService.IsSignedIn) return;
-            await LoadBlobsAsync(account, container);
+
+            // Reset to the root level when the user switches containers.
+            _currentPrefix = string.Empty;
+            await LoadBlobsHierarchyAsync(account, container, _currentPrefix);
         }
 
-        private async Task LoadBlobsAsync(StorageAccountInfo account, string container)
+        /// <summary>
+        /// Loads the hierarchical listing for <paramref name="prefix"/> inside
+        /// <paramref name="container"/>.  Only the items at this virtual-folder level
+        /// are fetched, making the operation fast even for very large containers.
+        /// </summary>
+        private async Task LoadBlobsHierarchyAsync(StorageAccountInfo account, string container, string prefix)
         {
             if (!_azureAccountService.IsSignedIn) return;
 
             lstBlobs.Items.Clear();
             btnOpen.Enabled = false;
+            _currentPrefix = prefix;
+            UpdateBlobsLabel();
 
             // ── Lazy load ───────────────────────────────────────────────────
-            var cached = _sessionManager.GetCachedBlobs(account.BlobEndpoint, container);
-            if (cached != null)
+            var cached = _sessionManager.GetCachedHierarchy(account.BlobEndpoint, container, prefix);
+            if (cached.HasValue)
             {
-                lstBlobs.BeginUpdate();
-                lstBlobs.Items.AddRange(cached.Cast<object>().ToArray());
-                lstBlobs.EndUpdate();
-                lblStatus.Text = $"{lstBlobs.Items.Count} blob(s). (cached)";
+                PopulateBlobList(prefix, cached.Value.Prefixes, cached.Value.Blobs);
+                lblStatus.Text = $"{lstBlobs.Items.Count - (string.IsNullOrEmpty(prefix) ? 0 : 1)} item(s). (cached)";
                 return;
             }
 
             // ── Cache miss ──────────────────────────────────────────────────
-            SetBusy(true, $"Loading blobs in '{container}'...");
+            SetBusy(true, $"Loading '{(string.IsNullOrEmpty(prefix) ? container : prefix)}'...");
             try
             {
-                var blobs = await _azureBlobService.ListBlobsAsync(account.BlobEndpoint, container);
-                _sessionManager.CacheBlobs(account.BlobEndpoint, container, blobs);
-                lstBlobs.BeginUpdate();
-                lstBlobs.Items.AddRange(blobs.Cast<object>().ToArray());
-                lstBlobs.EndUpdate();
-                lblStatus.Text = $"{lstBlobs.Items.Count} blob(s) in '{container}'.";
+                var (prefixes, blobs) = await _azureBlobService.ListBlobsByHierarchyAsync(
+                    account.BlobEndpoint, container, string.IsNullOrEmpty(prefix) ? null : prefix);
+                _sessionManager.CacheHierarchy(account.BlobEndpoint, container, prefix, prefixes, blobs);
+                PopulateBlobList(prefix, prefixes, blobs);
+                int itemCount = prefixes.Count + blobs.Count;
+                lblStatus.Text = $"{itemCount} item(s) in '{(string.IsNullOrEmpty(prefix) ? container : prefix)}'.";
             }
             catch (Exception ex)
             {
@@ -257,23 +289,97 @@ namespace ParquetExplorer
             finally { SetBusy(false, ""); }
         }
 
-        private void lstBlobs_SelectedIndexChanged(object sender, EventArgs e) =>
-            btnOpen.Enabled = lstBlobs.SelectedItem != null;
+        /// <summary>
+        /// Fills <see cref="lstBlobs"/> with a ".." back-item (when not at root),
+        /// virtual-folder items, and blob items.
+        /// </summary>
+        private void PopulateBlobList(string prefix, IReadOnlyList<string> prefixes, IReadOnlyList<string> blobs)
+        {
+            lstBlobs.BeginUpdate();
+            lstBlobs.Items.Clear();
+
+            // Back-navigation item when inside a virtual folder.
+            if (!string.IsNullOrEmpty(prefix))
+                lstBlobs.Items.Add(new BlobListItem { IsBack = true });
+
+            // Virtual folders — show only the last segment (e.g. "month=01/").
+            foreach (var p in prefixes)
+            {
+                var segment = p.StartsWith(prefix, StringComparison.Ordinal) ? p[prefix.Length..] : p;
+                lstBlobs.Items.Add(new BlobListItem
+                {
+                    IsFolder    = true,
+                    FullPath    = p,
+                    DisplayName = segment,
+                });
+            }
+
+            // Actual blobs — show only the filename.
+            foreach (var b in blobs)
+            {
+                var name = b.StartsWith(prefix, StringComparison.Ordinal) ? b[prefix.Length..] : b;
+                lstBlobs.Items.Add(new BlobListItem
+                {
+                    IsFolder    = false,
+                    FullPath    = b,
+                    DisplayName = name,
+                });
+            }
+
+            lstBlobs.EndUpdate();
+        }
+
+        private void lstBlobs_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            // Enable Open only when a real blob (not a folder or back-item) is selected.
+            btnOpen.Enabled = lstBlobs.SelectedItem is BlobListItem item
+                && !item.IsFolder && !item.IsBack;
+        }
+
+        private async void lstBlobs_DoubleClick(object sender, EventArgs e)
+        {
+            if (lstAccounts.SelectedItem is not StorageAccountInfo account
+                || lstContainers.SelectedItem is not string container
+                || lstBlobs.SelectedItem is not BlobListItem item
+                || !_azureAccountService.IsSignedIn) return;
+
+            if (item.IsBack)
+            {
+                // Navigate up one level.
+                await LoadBlobsHierarchyAsync(account, container, GetParentPrefix(_currentPrefix));
+            }
+            else if (item.IsFolder)
+            {
+                // Navigate into the selected virtual folder.
+                await LoadBlobsHierarchyAsync(account, container, item.FullPath);
+            }
+            else
+            {
+                // Double-clicking a blob is a shortcut for the Open button.
+                await OpenSelectedBlobAsync(account, container, item);
+            }
+        }
 
         private async void btnOpen_Click(object sender, EventArgs e)
         {
             if (lstAccounts.SelectedItem is not StorageAccountInfo account
                 || lstContainers.SelectedItem is not string container
-                || lstBlobs.SelectedItem is not string blobName
+                || lstBlobs.SelectedItem is not BlobListItem item
+                || item.IsFolder || item.IsBack
                 || !_azureAccountService.IsSignedIn) return;
 
-            SetBusy(true, $"Downloading '{blobName}'...");
+            await OpenSelectedBlobAsync(account, container, item);
+        }
+
+        private async Task OpenSelectedBlobAsync(StorageAccountInfo account, string container, BlobListItem item)
+        {
+            SetBusy(true, $"Downloading '{item.DisplayName}'...");
             try
             {
                 var tempFile = await _azureBlobService.DownloadBlobToTempFileAsync(
-                    account.BlobEndpoint, container, blobName);
+                    account.BlobEndpoint, container, item.FullPath);
                 BlobOpenRequested?.Invoke(this,
-                    new BlobSelectedEventArgs(tempFile, $"{account.Name}/{container}/{blobName}"));
+                    new BlobSelectedEventArgs(tempFile, $"{account.Name}/{container}/{item.FullPath}"));
             }
             catch (Exception ex)
             {
@@ -286,6 +392,27 @@ namespace ParquetExplorer
 
         // ── Helpers ────────────────────────────────────────────────────────
 
+        /// <summary>
+        /// Updates <see cref="lblBlobsLabel"/> to show "Blobs" at root or
+        /// "Blobs / current/prefix/" when inside a virtual folder.
+        /// </summary>
+        private void UpdateBlobsLabel() =>
+            lblBlobsLabel.Text = string.IsNullOrEmpty(_currentPrefix)
+                ? "Blobs"
+                : $"Blobs / {_currentPrefix}";
+
+        /// <summary>
+        /// Returns the parent prefix of <paramref name="prefix"/>.
+        /// E.g. "year=2024/month=01/" → "year=2024/", "year=2024/" → "".
+        /// </summary>
+        private static string GetParentPrefix(string prefix)
+        {
+            if (string.IsNullOrEmpty(prefix)) return string.Empty;
+            var trimmed = prefix.TrimEnd('/');
+            var idx = trimmed.LastIndexOf('/');
+            return idx < 0 ? string.Empty : trimmed.Substring(0, idx + 1);
+        }
+
         private void SetBusy(bool busy, string message)
         {
             btnSignIn.Enabled = !busy;
@@ -293,7 +420,7 @@ namespace ParquetExplorer
             lstAccounts.Enabled = !busy;
             lstContainers.Enabled = !busy;
             lstBlobs.Enabled = !busy;
-            btnOpen.Enabled = !busy && lstBlobs.SelectedItem != null;
+            btnOpen.Enabled = !busy && lstBlobs.SelectedItem is BlobListItem item && !item.IsFolder && !item.IsBack;
             Cursor = busy ? Cursors.WaitCursor : Cursors.Default;
             if (!string.IsNullOrEmpty(message))
                 lblStatus.Text = message;
