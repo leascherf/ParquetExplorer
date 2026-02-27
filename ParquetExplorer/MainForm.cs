@@ -78,21 +78,26 @@ namespace ParquetExplorer
 
         private async Task OpenFileAsync()
         {
-            using var dlg = new OpenFileDialog
-            {
-                Title = "Open Parquet File",
-                Filter = "Parquet Files (*.parquet)|*.parquet|All Files (*.*)|*.*"
-            };
+            using var dlg = new FilePickerDialog(
+                _azureAccountService, _azureBlobService, _sessionManager, _sftpService);
 
-            if (dlg.ShowDialog() != DialogResult.OK) return;
+            if (dlg.ShowDialog(this) != DialogResult.OK || dlg.SelectedFilePath == null) return;
+
+            string filePath    = dlg.SelectedFilePath;
+            string displayName = dlg.SelectedDisplayName ?? filePath;
+            bool   isTemp      = dlg.IsTempFile;
 
             toolStripStatusLabel1.Text = "Loading...";
             try
             {
-                await _explorer.LoadFileAsync(dlg.FileName);
+                await _explorer.LoadFileAsync(filePath);
 
-                var fileInfo = new System.IO.FileInfo(dlg.FileName);
-                lblFilePath.Text = $"📄  {dlg.FileName}";
+                var fileInfo = new System.IO.FileInfo(filePath);
+                string icon;
+                if (!isTemp) icon = "📄";
+                else if (displayName.StartsWith("sftp://")) icon = "🔒";
+                else icon = "☁";
+                lblFilePath.Text = $"{icon}  {displayName}";
                 lblFilePath.ForeColor = System.Drawing.Color.FromArgb(40, 56, 72);
                 lblFilePath.Font = new System.Drawing.Font("Segoe UI", 9f);
 
@@ -112,6 +117,12 @@ namespace ParquetExplorer
                 MessageBox.Show($"Error loading file:\n{ex.Message}", "Error",
                     MessageBoxButtons.OK, MessageBoxIcon.Error);
                 toolStripStatusLabel1.Text = "⚠  Error loading file";
+            }
+            finally
+            {
+                if (isTemp)
+                    try { if (System.IO.File.Exists(filePath)) System.IO.File.Delete(filePath); }
+                    catch { /* best effort */ }
             }
         }
 
